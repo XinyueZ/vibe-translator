@@ -12,6 +12,7 @@ A macOS menu bar translation application powered by Google VertexAI.
 
 - 🌍 **Menu Bar Integration** - Lives in your macOS menu bar
 - 🎈 **Floating Widget** - Persistent, draggable desktop widget that expands to show translations instantly without spawning new windows
+- 👻 **Omnipresent** - Strictly stays above all other apps and follows you across all macOS Spaces/Desktops automatically
 - 🔄 **Multi-Language Support** - Translate between Chinese, English, and German
 - 🎨 **Style Options** - Choose translation tones (informal/formal German, regional Chinese dialects, etc.)
 - 🎯 **Text Selection** - Select text anywhere and translate instantly
@@ -119,6 +120,7 @@ MIT
 
 - 🌍 **菜单栏集成** - 常驻在 macOS 菜单栏
 - 🎈 **悬浮组件** - 常驻桌面、可随意拖拽的悬浮球，瞬间展开显示翻译结果，告别反复弹窗
+- 👻 **无处不在** - 拥有最高系统层级置顶，且会像“幽灵”一样跨越所有 macOS 桌面空间 (Spaces) 跟随你
 - 🔄 **多语言支持** - 中文、英文、德文互译
 - 🎨 **风格选项** - 选择翻译风格（德语 duzen/Sie、中文地域口音等）
 - 🎯 **文本选择** - 在任何地方选中文本即可翻译

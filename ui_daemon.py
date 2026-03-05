@@ -145,6 +145,25 @@ class TranslatorUI:
         # Start Socket Server
         self.server_thread = threading.Thread(target=self._start_server, daemon=True)
         self.server_thread.start()
+        
+        # Force strict topmost using PyObjC after windows are mapped
+        self.root.after(100, self._force_strict_topmost)
+
+    def _force_strict_topmost(self):
+        """Use macOS native APIs to ensure windows stay above absolutely everything and cross spaces"""
+        try:
+            from AppKit import NSApp
+            for window in NSApp.windows():
+                # 101 is NSPopUpMenuWindowLevel
+                window.setLevel_(101)
+                
+                # Collection Behavior:
+                # 1 = NSWindowCollectionBehaviorCanJoinAllSpaces (Appears on all spaces)
+                # 16 = NSWindowCollectionBehaviorStationary (Unaffected by Expose/Mission Control)
+                # 17 = 1 | 16
+                window.setCollectionBehavior_(17) 
+        except Exception as e:
+            print(f"Notice: Could not set strict macOS topmost/spaces level: {e}")
 
     def _build_main_ui(self):
         main_frame = tk.Frame(self.main_win, padx=20, pady=20, bg=self.colors['bg'])
@@ -306,6 +325,7 @@ class TranslatorUI:
         self.main_win.withdraw()
         self.widget.deiconify()
         self.widget.lift()
+        self.root.after(50, self._force_strict_topmost)
 
     def expand_to_main(self):
         """Hide widget, show main window"""
@@ -322,6 +342,7 @@ class TranslatorUI:
         self.main_win.deiconify()
         self.main_win.lift()
         self.main_win.focus_force()
+        self.root.after(50, self._force_strict_topmost)
         
         # Simple macOS focus push without aggressive loops
         try:
