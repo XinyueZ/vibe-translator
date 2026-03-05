@@ -255,9 +255,9 @@ def show_result(original, translation, source_lang, target_lang):
         bg=colors['textbox_bg'],
         fg=colors['fg'],
         insertbackground=colors['fg'],  # Cursor color
-        spacing1=2,  # Space before each line
+        spacing1=4,  # Space before each line (Golden ratio: font_size * φ ≈ 19.4, leading ≈ 7.4)
         spacing2=0,  # Space between wrapped lines
-        spacing3=2   # Space after each line
+        spacing3=4   # Space after each line
     )
     # Allow textbox to expand proportionally (takes 1 part of available space)
     orig_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
@@ -286,9 +286,9 @@ def show_result(original, translation, source_lang, target_lang):
         bg=colors['textbox_bg'],
         fg=colors['fg'],
         insertbackground=colors['fg'],  # Cursor color
-        spacing1=2,  # Space before each line
+        spacing1=4,  # Space before each line (Golden ratio: font_size * φ ≈ 19.4, leading ≈ 7.4)
         spacing2=0,  # Space between wrapped lines
-        spacing3=2   # Space after each line
+        spacing3=4   # Space after each line
     )
     # Allow textbox to expand proportionally (takes 1 part of available space)
     trans_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
