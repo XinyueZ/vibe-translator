@@ -91,7 +91,7 @@ class TranslatorApp(rumps.App):
         self.mouse_follow_item.state = self.mouse_follow
 
         # Translation options in menu
-        self.menu = [
+        menu_items = [
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             None,  # Separator
             rumps.MenuItem(t['add_lang'], callback=self.add_translation_language),
@@ -103,9 +103,9 @@ class TranslatorApp(rumps.App):
                 label_text = f"{cl['source']} → {cl['target']}"
                 # Use a closure to capture the ID
                 item = rumps.MenuItem(label_text, callback=lambda _, cid=cl['id']: self.translate_custom(cid))
-                self.menu.append(item)
+                menu_items.append(item)
                 
-        self.menu.extend([
+        menu_items.extend([
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
             rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
             rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
