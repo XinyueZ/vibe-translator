@@ -184,15 +184,10 @@ class TranslatorApp(rumps.App):
                             cid = cmd.replace('custom_translate_', '')
                             self.translate_custom(cid)
                         elif cmd == 'reload_config':
-                            # Restart app to refresh menus
-                            import os, sys, subprocess
-                            subprocess.Popen(
-                                [sys.executable, sys.argv[0]],
-                                stdout=subprocess.DEVNULL,
-                                stderr=subprocess.DEVNULL,
-                                start_new_session=True
-                            )
-                            rumps.quit_application()
+                            print(">>> Reloading config dynamically")
+                            self.config = load_config()
+                            self._rebuild_main_menu()
+                            self._send_to_daemon({'action': 'reload_ui_config'})
                         elif cmd == 'auto_zh': self.translate_auto_to_zh(None)
                         elif cmd == 'add_lang': self.add_translation_language(None)
                         elif cmd == 'remove_lang': self.remove_translation_language(None)
@@ -210,6 +205,50 @@ class TranslatorApp(rumps.App):
                 print(f"Command listener error: {e}")
         
         threading.Thread(target=listener, daemon=True).start()
+
+
+    def _rebuild_main_menu(self):
+        t = self.i18n[self.ui_lang]
+        
+        # We need to clear the existing menu
+        self.menu.clear()
+        
+        menu_items = [
+            rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
+            None,  # Separator
+            rumps.MenuItem(t['add_lang'], callback=self.add_translation_language),
+        ]
+        
+        if 'custom_langs' in self.config and len(self.config['custom_langs']) > 0:
+            menu_items.append(rumps.MenuItem(t['remove_lang'], callback=self.remove_translation_language))
+        
+        # Add custom languages
+        if 'custom_langs' in self.config:
+            for cl in self.config['custom_langs']:
+                label_text = f"• {cl['source']} → {cl['target']}"
+                item = rumps.MenuItem(label_text, callback=lambda _, cid=cl['id']: self.translate_custom(cid))
+                menu_items.append(item)
+                
+        menu_items.append(None) # Separator
+                
+        menu_items.extend([
+            rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
+            rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
+            rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
+            rumps.MenuItem(t['en_zh'], callback=self.translate_en_to_zh),
+            None,  # Separator
+            self.mouse_follow_item,
+            rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
+            rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
+            rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
+            None,  # Separator
+            rumps.MenuItem(t['auth'], callback=self.refresh_auth),
+            rumps.MenuItem(t['quit'], callback=self.quit_app)
+        ])
+        
+        # In rumps, if we assign to self.menu it creates a new menu, 
+        # or we can update the existing one. We cleared it, now we update it.
+        self.menu.update(menu_items)
 
     def init_vertexai(self):
         """Initialize Google GenAI client (VertexAI or AI Studio)"""
