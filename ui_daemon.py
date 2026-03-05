@@ -167,22 +167,44 @@ class TranslatorUI:
         self.widget = tk.Toplevel(self.root)
         self.widget.attributes('-topmost', True)
         self.widget.overrideredirect(True) # No window decorations
-        self.widget.configure(bg=self.colors['button_bg'])
+        
+        # Make the window background transparent
+        self.widget.configure(bg='systemTransparent')
+        self.widget.attributes('-transparent', True) # Important for macOS
         
         # Place in saved position or bottom right corner
         self.widget_x = self.config.get('widget_x', self.root.winfo_screenwidth() - 80)
         self.widget_y = self.config.get('widget_y', self.root.winfo_screenheight() - 100)
-        self.widget.geometry(f"60x65+{self.widget_x}+{self.widget_y}")
         
-        # Create a frame to hold icon and text
-        self.widget_frame = tk.Frame(self.widget, bg=self.colors['button_bg'])
-        self.widget_frame.pack(expand=True, fill='both')
-
-        self.widget_lbl = tk.Label(self.widget_frame, text="🌍", font=("Arial", 24), bg=self.colors['button_bg'], fg='white', cursor="hand2")
-        self.widget_lbl.pack(pady=(5, 0))
+        # Make the window square for a perfect circle (e.g., 60x60)
+        widget_size = 60
+        self.widget.geometry(f"{widget_size}x{widget_size}+{self.widget_x}+{self.widget_y}")
         
-        self.widget_hint = tk.Label(self.widget_frame, text=self.t['ctrl_click'], font=("Arial", 9), bg=self.colors['button_bg'], fg='white', cursor="hand2")
-        self.widget_hint.pack(pady=(0, 2))
+        # Create a Canvas to draw the circle
+        self.widget_canvas = tk.Canvas(self.widget, width=widget_size, height=widget_size, bg='systemTransparent', highlightthickness=0)
+        self.widget_canvas.pack(expand=True, fill='both')
+        
+        # Draw the circle (margin of 2 pixels to avoid clipping)
+        margin = 2
+        self.circle_id = self.widget_canvas.create_oval(
+            margin, margin, widget_size-margin, widget_size-margin, 
+            fill=self.colors['button_bg'], outline=""
+        )
+        
+        # Add the icon text in the center
+        self.widget_icon = self.widget_canvas.create_text(
+            widget_size/2, widget_size/2 - 5, 
+            text="🌍", font=("Arial", 22), fill="white"
+        )
+        
+        # Add the hint text below the icon
+        self.widget_hint = self.widget_canvas.create_text(
+            widget_size/2, widget_size/2 + 15, 
+            text=self.t['ctrl_click'], font=("Arial", 8), fill="white"
+        )
+        
+        # Bind events to the canvas instead of labels
+        self.widget_target = self.widget_canvas
         
         # Dragging logic variables
         self._drag_start_x = 0
@@ -216,7 +238,7 @@ class TranslatorUI:
                 self.config['widget_y'] = self.widget.winfo_y()
                 save_config(self.config)
 
-        for ui_element in (self.widget_lbl, self.widget_hint, self.widget_frame):
+        for ui_element in (self.widget_canvas,):
             ui_element.bind("<ButtonPress-1>", on_drag_start)
             ui_element.bind("<B1-Motion>", on_drag_motion)
             ui_element.bind("<ButtonRelease-1>", on_drag_release)
@@ -251,7 +273,7 @@ class TranslatorUI:
             finally:
                 self.context_menu.grab_release()
 
-        for ui_element in (self.widget_lbl, self.widget_hint, self.widget_frame):
+        for ui_element in (self.widget_canvas,):
             ui_element.bind("<Button-2>", show_context_menu)
             ui_element.bind("<Button-3>", show_context_menu)
             ui_element.bind("<Control-Button-1>", show_context_menu)
