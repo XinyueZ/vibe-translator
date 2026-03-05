@@ -58,6 +58,7 @@ class TranslatorApp(rumps.App):
                 'auth': 'Auth 刷新授权',
                 'ui_zh': '界面中文',
                 'ui_en': '界面英文',
+                'mouse_follow': '鼠标跟随',
                 'quit': '退出'
             },
             'en': {
@@ -69,6 +70,7 @@ class TranslatorApp(rumps.App):
                 'auth': 'Auth Refresh',
                 'ui_zh': 'UI: Chinese',
                 'ui_en': 'UI: English',
+                'mouse_follow': 'Mouse Follow',
                 'quit': 'Quit'
             }
         }
@@ -79,6 +81,10 @@ class TranslatorApp(rumps.App):
 
         # Start background listener for widget commands
         self.start_command_listener()
+
+        self.mouse_follow = self.config.get('mouse_follow', False)
+        self.mouse_follow_item = rumps.MenuItem(t['mouse_follow'], callback=self.toggle_mouse_follow)
+        self.mouse_follow_item.state = self.mouse_follow
 
         # Translation options in menu
         self.menu = [
@@ -93,8 +99,16 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
             rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
+            self.mouse_follow_item,
             rumps.MenuItem(t['quit'], callback=self.quit_app)
         ]
+
+    def toggle_mouse_follow(self, sender):
+        self.mouse_follow = not self.mouse_follow
+        sender.state = self.mouse_follow
+        self.config['mouse_follow'] = self.mouse_follow
+        save_config(self.config)
+        self._send_to_daemon({'action': 'toggle_mouse_follow', 'state': self.mouse_follow})
 
     def change_lang(self, lang):
         if self.ui_lang == lang: return
@@ -145,6 +159,7 @@ class TranslatorApp(rumps.App):
                         elif cmd == 'auth': self.refresh_auth(None)
                         elif cmd == 'ui_zh': self.change_lang('zh')
                         elif cmd == 'ui_en': self.change_lang('en')
+                        elif cmd == 'toggle_mouse_follow': self.toggle_mouse_follow(self.mouse_follow_item)
                         elif cmd == 'quit': self.quit_app(None)
                     conn.close()
             except Exception as e:

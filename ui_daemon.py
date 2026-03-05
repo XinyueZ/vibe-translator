@@ -89,6 +89,7 @@ class TranslatorUI:
                 'auth': 'Auth 刷新授权',
                 'ui_zh': '界面中文',
                 'ui_en': '界面英文',
+                'mouse_follow': '鼠标跟随',
                 'quit': '退出',
                 'ctrl_click': 'ctrl+鼠标',
                 'wait': '等待翻译...',
@@ -113,6 +114,7 @@ class TranslatorUI:
                 'auth': 'Auth Refresh',
                 'ui_zh': 'UI: Chinese',
                 'ui_en': 'UI: English',
+                'mouse_follow': 'Mouse Follow',
                 'quit': 'Quit',
                 'ctrl_click': 'ctrl+click',
                 'wait': 'Waiting for translation...',
@@ -230,6 +232,14 @@ class TranslatorUI:
         self.context_menu.add_command(label=self.t['ui_zh'], command=lambda: self.send_command_to_main('ui_zh'))
         self.context_menu.add_command(label=self.t['ui_en'], command=lambda: self.send_command_to_main('ui_en'))
         self.context_menu.add_separator()
+        
+        self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', False))
+        def on_widget_toggle_mouse_follow():
+            # Send command to main which will broadcast state back
+            self.send_command_to_main('toggle_mouse_follow')
+        
+        self.context_menu.add_checkbutton(label=self.t['mouse_follow'], variable=self.mouse_follow_var, command=on_widget_toggle_mouse_follow)
+        
         self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
         def show_context_menu(event):
@@ -266,6 +276,47 @@ class TranslatorUI:
         
         # Start watchdog to prevent macOS from mysteriously hiding the widget
         self._start_visibility_watchdog()
+
+        # Mouse follow logic
+        self.mouse_follow = self.config.get('mouse_follow', False)
+        self.ctrl_pressed = False
+        
+        try:
+            from pynput import keyboard
+            def on_press(key):
+                if key == keyboard.Key.ctrl or key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
+                    self.ctrl_pressed = True
+            def on_release(key):
+                if key == keyboard.Key.ctrl or key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
+                    self.ctrl_pressed = False
+            self.kb_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
+            self.kb_listener.start()
+        except ImportError:
+            pass
+
+        self.root.after(20, self._mouse_follow_loop)
+
+    def _mouse_follow_loop(self):
+        if self.mouse_follow and not self.ctrl_pressed and not self.main_win.winfo_viewable() and not getattr(self, '_is_dragging', False):
+            x = self.root.winfo_pointerx()
+            y = self.root.winfo_pointery()
+            
+            # Simple offset
+            new_x = x + 15
+            new_y = y + 15
+            
+            screen_w = self.root.winfo_screenwidth()
+            screen_h = self.root.winfo_screenheight()
+            
+            # Bound check assuming widget is approx 60x65
+            if new_x + 60 > screen_w:
+                new_x = x - 75
+            if new_y + 65 > screen_h:
+                new_y = y - 80
+                
+            self.widget.geometry(f"+{new_x}+{new_y}")
+            
+        self.root.after(20, self._mouse_follow_loop)
 
     def _start_visibility_watchdog(self):
         """Periodically ensure the widget remains visible and on top"""
@@ -603,8 +654,16 @@ class TranslatorUI:
                                 os._exit(0)
                             self.root.after(0, force_quit)
                             break
-                        # Important: Schedule update_content on the main Tkinter thread
-                        self.root.after(0, lambda p=payload: self.update_content(p))
+                        elif payload.get('action') == 'toggle_mouse_follow':
+                            self.mouse_follow = payload.get('state', False)
+                            self.config['mouse_follow'] = self.mouse_follow
+                            try:
+                                self.mouse_follow_var.set(self.mouse_follow)
+                            except AttributeError:
+                                pass
+                        else:
+                            # Important: Schedule update_content on the main Tkinter thread
+                            self.root.after(0, lambda p=payload: self.update_content(p))
                     except json.JSONDecodeError as e:
                         print(f"Invalid payload: {e}")
                 conn.close()
