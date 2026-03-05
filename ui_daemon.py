@@ -90,6 +90,7 @@ class TranslatorUI:
                 'ui_zh': '界面中文',
                 'ui_en': '界面英文',
                 'mouse_follow': '鼠标跟随',
+                'how_to_use': '使用方法',
                 'quit': '退出',
                 'ctrl_click': 'ctrl+鼠标',
                 'wait': '等待翻译...',
@@ -115,6 +116,7 @@ class TranslatorUI:
                 'ui_zh': 'UI: Chinese',
                 'ui_en': 'UI: English',
                 'mouse_follow': 'Mouse Follow',
+                'how_to_use': 'How to Use',
                 'quit': 'Quit',
                 'ctrl_click': 'ctrl+click',
                 'wait': 'Waiting for translation...',
@@ -233,13 +235,14 @@ class TranslatorUI:
         self.context_menu.add_command(label=self.t['ui_en'], command=lambda: self.send_command_to_main('ui_en'))
         self.context_menu.add_separator()
         
-        self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', False))
+        self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', True))
         def on_widget_toggle_mouse_follow():
             # Send command to main which will broadcast state back
             self.send_command_to_main('toggle_mouse_follow')
         
         self.context_menu.add_checkbutton(label=self.t['mouse_follow'], variable=self.mouse_follow_var, command=on_widget_toggle_mouse_follow)
         
+        self.context_menu.add_command(label=self.t['how_to_use'], command=self.show_toast)
         self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
         def show_context_menu(event):
@@ -278,7 +281,7 @@ class TranslatorUI:
         self._start_visibility_watchdog()
 
         # Mouse follow logic
-        self.mouse_follow = self.config.get('mouse_follow', False)
+        self.mouse_follow = self.config.get('mouse_follow', True)
         self.ctrl_pressed = False
         
         try:
@@ -302,17 +305,17 @@ class TranslatorUI:
             y = self.root.winfo_pointery()
             
             # Simple offset
-            new_x = x + 15
-            new_y = y + 15
+            new_x = x + 5
+            new_y = y + 5
             
             screen_w = self.root.winfo_screenwidth()
             screen_h = self.root.winfo_screenheight()
             
             # Bound check assuming widget is approx 60x65
             if new_x + 60 > screen_w:
-                new_x = x - 75
+                new_x = x - 65
             if new_y + 65 > screen_h:
-                new_y = y - 80
+                new_y = y - 70
                 
             self.widget.geometry(f"+{new_x}+{new_y}")
             
@@ -339,6 +342,73 @@ class TranslatorUI:
         if self.ui_lang == 'en':
             return lang_str.replace("自动检测", "Auto").replace("中文", "ZH").replace("英文", "EN").replace("德文", "DE")
         return lang_str
+
+
+    def show_toast(self):
+        """Show a temporary toast notification"""
+        if hasattr(self, 'toast_win') and self.toast_win and self.toast_win.winfo_exists():
+            self.toast_win.destroy()
+            
+        self.toast_win = tk.Toplevel(self.root)
+        self.toast_win.overrideredirect(True)
+        self.toast_win.attributes('-topmost', True)
+        self.toast_win.configure(bg=self.colors['bg'], highlightthickness=1, highlightbackground=self.colors['fg'])
+        
+        if self.ui_lang == 'zh':
+            msg = "💡 使用方法:\n\n1. 在任何地方选中文本\n2. 按 Cmd+C 复制\n3. 在悬浮球上使用「Ctrl+鼠标左键」点击，选择翻译功能\n\n(开启「鼠标跟随」后悬浮球会自动靠近鼠标)"
+        else:
+            msg = "💡 How to Use:\n\n1. Select text anywhere\n2. Press Cmd+C to copy\n3. Ctrl+Click on the widget to select translation options\n\n(Enable 'Mouse Follow' for easier access)"
+            
+        lbl = tk.Label(
+            self.toast_win, 
+            text=msg, 
+            bg=self.colors['bg'], 
+            fg=self.colors['fg'], 
+            font=("System", 13), 
+            padx=20, 
+            pady=20, 
+            justify="left"
+        )
+        lbl.pack()
+        
+        self.toast_win.update_idletasks()
+        w = self.toast_win.winfo_width()
+        h = self.toast_win.winfo_height()
+        
+        sw = self.toast_win.winfo_screenwidth()
+        sh = self.toast_win.winfo_screenheight()
+        x = (sw - w) // 2
+        y = (sh - h) // 2
+        
+        self.toast_win.geometry(f"{w}x{h}+{x}+{y}")
+        
+        alpha = 0.0
+        self.toast_win.attributes('-alpha', alpha)
+        
+        def fade_in():
+            nonlocal alpha
+            if not self.toast_win.winfo_exists(): return
+            if alpha < 0.95:
+                alpha += 0.05
+                self.toast_win.attributes('-alpha', alpha)
+                self.root.after(20, fade_in)
+            else:
+                self.root.after(8000, fade_out)
+                
+        def fade_out():
+            nonlocal alpha
+            if not self.toast_win.winfo_exists(): return
+            if alpha > 0.0:
+                alpha -= 0.05
+                self.toast_win.attributes('-alpha', alpha)
+                self.root.after(20, fade_out)
+            else:
+                self.toast_win.destroy()
+                
+        self.toast_win.bind("<Button-1>", lambda e: fade_out())
+        lbl.bind("<Button-1>", lambda e: fade_out())
+        
+        fade_in()
 
     def send_command_to_main(self, cmd):
         """Send a menu command to the main.py tray application"""
@@ -654,6 +724,8 @@ class TranslatorUI:
                                 os._exit(0)
                             self.root.after(0, force_quit)
                             break
+                        elif payload.get('action') == 'show_how_to_use':
+                            self.show_toast()
                         elif payload.get('action') == 'toggle_mouse_follow':
                             self.mouse_follow = payload.get('state', False)
                             self.config['mouse_follow'] = self.mouse_follow

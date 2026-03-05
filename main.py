@@ -59,6 +59,7 @@ class TranslatorApp(rumps.App):
                 'ui_zh': '界面中文',
                 'ui_en': '界面英文',
                 'mouse_follow': '鼠标跟随',
+                'how_to_use': '使用方法',
                 'quit': '退出'
             },
             'en': {
@@ -71,6 +72,7 @@ class TranslatorApp(rumps.App):
                 'ui_zh': 'UI: Chinese',
                 'ui_en': 'UI: English',
                 'mouse_follow': 'Mouse Follow',
+                'how_to_use': 'How to Use',
                 'quit': 'Quit'
             }
         }
@@ -82,7 +84,7 @@ class TranslatorApp(rumps.App):
         # Start background listener for widget commands
         self.start_command_listener()
 
-        self.mouse_follow = self.config.get('mouse_follow', False)
+        self.mouse_follow = self.config.get('mouse_follow', True)
         self.mouse_follow_item = rumps.MenuItem(t['mouse_follow'], callback=self.toggle_mouse_follow)
         self.mouse_follow_item.state = self.mouse_follow
 
@@ -100,8 +102,13 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
             self.mouse_follow_item,
+            rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
         ]
+
+
+    def show_how_to_use(self, _):
+        self._send_to_daemon({'action': 'show_how_to_use'})
 
     def toggle_mouse_follow(self, sender):
         self.mouse_follow = not self.mouse_follow
