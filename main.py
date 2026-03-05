@@ -35,6 +35,8 @@ class TranslatorApp(rumps.App):
 
         # Translation options in menu
         self.menu = [
+            rumps.MenuItem("自动检测 → 中文", callback=self.translate_auto_to_zh),
+            None,  # Separator
             rumps.MenuItem("中文 → 德文", callback=self.translate_zh_to_de),
             rumps.MenuItem("德文 → 中文", callback=self.translate_de_to_zh),
             rumps.MenuItem("中文 → 英文", callback=self.translate_zh_to_en),
@@ -61,7 +63,8 @@ class TranslatorApp(rumps.App):
                     if data:
                         cmd = data.strip()
                         print(f">>> Received command from widget: {cmd}")
-                        if cmd == 'zh_de': self.translate_zh_to_de(None)
+                        if cmd == 'auto_zh': self.translate_auto_to_zh(None)
+                        elif cmd == 'zh_de': self.translate_zh_to_de(None)
                         elif cmd == 'de_zh': self.translate_de_to_zh(None)
                         elif cmd == 'zh_en': self.translate_zh_to_en(None)
                         elif cmd == 'en_zh': self.translate_en_to_zh(None)
@@ -123,6 +126,17 @@ class TranslatorApp(rumps.App):
             )
         except Exception as e:
             print(f"Error starting UI Daemon: {e}")
+
+    def translate_auto_to_zh(self, _):
+        """自动检测 → 中文"""
+        print(">>> Menu clicked: 自动检测 → 中文")
+        import sys
+        sys.stdout.flush()
+        text = self.get_selected_text()
+        if text:
+            print(f">>> Got text, starting translation: {text[:50]}...")
+            sys.stdout.flush()
+            self.translate_text(text, "自动检测", "中文", "Chinese")
 
     def translate_zh_to_de(self, _):
         """中文 → 德文"""

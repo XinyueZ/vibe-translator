@@ -15,7 +15,7 @@ A macOS menu bar translation application powered by Google VertexAI.
 - 🖱️ **Widget Context Menu** - Right-click (or Ctrl+Click) the floating widget to access all translation options directly without reaching for the menu bar
 - ⏳ **Real-time Progress** - UI instantly expands to show the original text and a loading state while waiting for AI translation
 - 👻 **Omnipresent** - Strictly stays above all other apps and follows you across all macOS Spaces/Desktops automatically
-- 🔄 **Multi-Language Support** - Translate between Chinese, English, and German
+- 🔄 **Multi-Language Support** - Auto-detect to Chinese, plus translation between Chinese, English, and German
 - 🎨 **Style Options** - Choose translation tones (informal/formal German, regional Chinese dialects, etc.)
 - 🎯 **Text Selection** - Select text anywhere and translate instantly
 - 💬 **Elegant UI** - Clean, theme-aware dialog with resizable windows
@@ -83,7 +83,7 @@ Keep the Terminal window open (you can minimize it).
 1. You'll see a 🌍 icon in your menu bar (top-right corner) AND a persistent floating 🌍 widget on your desktop
 2. You can left-click and drag the floating widget anywhere on your screen
 3. Select text anywhere in macOS
-4. **Right-click** (or Ctrl+Click) the floating widget (or click the menu bar icon) and choose your translation direction
+4. **Right-click** (or Ctrl+Click) the floating widget (or click the menu bar icon) and choose your translation direction (e.g. Auto-Detect → Chinese)
 5. The app instantly expands to show your original text and a loading indicator
 6. Once translated, the result appears and is copied to your clipboard
 7. Press `Esc` or `Cmd+W` to close the dialog and collapse it back to a floating widget
@@ -126,7 +126,7 @@ MIT
 - 🖱️ **悬浮球右键菜单** - 直接右键（或 Ctrl+点击）悬浮球即可呼出所有翻译选项，无需再将鼠标移至屏幕顶部
 - ⏳ **实时进度** - 翻译时瞬间展开窗口，显示原文并提示正在呼叫 AI，告别盲目等待
 - 👻 **无处不在** - 拥有最高系统层级置顶，且会像“幽灵”一样跨越所有 macOS 桌面空间 (Spaces) 跟随你
-- 🔄 **多语言支持** - 中文、英文、德文互译
+- 🔄 **多语言支持** - 自动检测语言并翻译为中文，以及中文、英文、德文互译
 - 🎨 **风格选项** - 选择翻译风格（德语 duzen/Sie、中文地域口音等）
 - 🎯 **文本选择** - 在任何地方选中文本即可翻译
 - 💬 **优雅界面** - 简洁、跟随系统主题、可调整大小的对话框
@@ -194,7 +194,7 @@ python main.py
 1. 你会在菜单栏右上角看到 🌍 图标，并且在桌面上会看到一个常驻的 🌍 悬浮球
 2. 你可以按住鼠标左键随意拖拽悬浮球
 3. 在 macOS 任何地方选中文本
-4. **右键点击**（或 Ctrl+点击）悬浮球，选择翻译方向（也可使用顶部菜单栏）
+4. **右键点击**（或 Ctrl+点击）悬浮球，选择翻译方向（如：自动检测 → 中文）
 5. 悬浮球会瞬间展开，显示你选中的原文和加载动画
 6. 翻译完成后，结果会自动显示并复制到剪贴板
 7. 按 `Esc` 或 `Cmd+W` 关闭结果窗口，它会自动缩回变成悬浮球

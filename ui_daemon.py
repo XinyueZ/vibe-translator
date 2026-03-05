@@ -60,11 +60,16 @@ def get_theme_colors():
 
 def get_style_options(source_lang, target_lang):
     direction = f"{source_lang} → {target_lang}"
+    
+    # Common Chinese styles
+    chinese_styles = ["默认", "上海海派腔调", "大陆北方腔调", "大陆南方腔调", "台湾腔", "港台腔"]
+    
     styles = {
         "中文 → 德文": ["默认（duzen口吻）", "轻松（duzen口吻）", "官方（敬语口吻）", "随和（duzen口吻）", "非正式（duzen口吻）", "一般（duzen口吻）"],
-        "德文 → 中文": ["默认", "上海海派腔调", "大陆北方腔调", "大陆南方腔调", "台湾腔", "港台腔"],
+        "德文 → 中文": chinese_styles,
         "中文 → 英文": ["默认", "美国普通式", "美国牛仔式", "英国普通式", "英国绅士口吻"],
-        "英文 → 中文": ["默认", "上海海派腔调", "大陆北方腔调", "大陆南方腔调", "台湾腔", "港台腔"]
+        "英文 → 中文": chinese_styles,
+        "自动检测 → 中文": chinese_styles
     }
     return styles.get(direction, ["默认"])
 
@@ -154,6 +159,8 @@ class TranslatorUI:
 
         # Context Menu for the widget
         self.context_menu = tk.Menu(self.widget, tearoff=0)
+        self.context_menu.add_command(label="自动检测 → 中文", command=lambda: self.send_command_to_main('auto_zh'))
+        self.context_menu.add_separator()
         self.context_menu.add_command(label="中文 → 德文", command=lambda: self.send_command_to_main('zh_de'))
         self.context_menu.add_command(label="德文 → 中文", command=lambda: self.send_command_to_main('de_zh'))
         self.context_menu.add_command(label="中文 → 英文", command=lambda: self.send_command_to_main('zh_en'))
