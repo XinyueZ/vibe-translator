@@ -8,6 +8,16 @@
 
 A macOS menu bar translation application powered by **Google Gemini** (Supports both Google AI Studio API Keys and Google Cloud Vertex AI).
 
+### Screenshots
+
+<div align="center">
+  <img src="assets/screenshot_widget.png" alt="Floating Widget" width="400"/>
+  <p><i>Persistent, draggable floating widget with context menu</i></p>
+  <br/>
+  <img src="assets/screenshot_main.png" alt="Translation Result" width="600"/>
+  <p><i>Instantly expands to show translation results with style options</i></p>
+</div>
+
 ### Features
 
 - 🌍 **Menu Bar Integration** - Lives in your macOS menu bar
@@ -134,6 +144,16 @@ MIT
 ## 中文
 
 一个基于 **Google Gemini** 的 macOS 菜单栏翻译工具（同时支持 Google AI Studio API Key 和 Google Cloud Vertex AI 两种接入方式）。
+
+### 界面截图
+
+<div align="center">
+  <img src="assets/screenshot_widget.png" alt="悬浮球与右键菜单" width="400"/>
+  <p><i>常驻桌面、可随意拖拽的悬浮球及右键快捷菜单</i></p>
+  <br/>
+  <img src="assets/screenshot_main.png" alt="翻译结果主窗口" width="600"/>
+  <p><i>瞬间展开的翻译结果主窗口，支持多种语言风格切换</i></p>
+</div>
 
 ### 功能特性
 
