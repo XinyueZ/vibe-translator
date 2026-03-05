@@ -1,0 +1,6 @@
+rumps>=0.4.0
+pynput>=1.7.6
+pyperclip>=1.8.2
+google-genai>=0.2.0
+python-dotenv>=1.0.0
+pyobjc-framework-Cocoa>=10.0
