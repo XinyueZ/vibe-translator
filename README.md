@@ -217,3 +217,16 @@ python main.py
 ### 许可证
 
 MIT
+
+---
+
+## Stats
+
+![GitHub stars](https://img.shields.io/github/stars/XinyueZ/vibe-translator?style=social)
+![GitHub forks](https://img.shields.io/github/forks/XinyueZ/vibe-translator?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/XinyueZ/vibe-translator?style=social)
+![GitHub repo size](https://img.shields.io/github/repo-size/XinyueZ/vibe-translator)
+![GitHub language count](https://img.shields.io/github/languages/count/XinyueZ/vibe-translator)
+![GitHub top language](https://img.shields.io/github/languages/top/XinyueZ/vibe-translator)
+![GitHub last commit](https://img.shields.io/github/last-commit/XinyueZ/vibe-translator)
+![Visitors](https://api.visitorbadge.io/api/visitors?path=XinyueZ%2Fvibe-translator&countColor=%23263759&style=flat)
