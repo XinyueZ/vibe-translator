@@ -305,17 +305,17 @@ class TranslatorUI:
             y = self.root.winfo_pointery()
             
             # Simple offset
-            new_x = x + 5
-            new_y = y + 5
+            new_x = x + 10
+            new_y = y + 10
             
             screen_w = self.root.winfo_screenwidth()
             screen_h = self.root.winfo_screenheight()
             
             # Bound check assuming widget is approx 60x65
             if new_x + 60 > screen_w:
-                new_x = x - 65
+                new_x = x - 70
             if new_y + 65 > screen_h:
-                new_y = y - 70
+                new_y = y - 75
                 
             self.widget.geometry(f"+{new_x}+{new_y}")
             
