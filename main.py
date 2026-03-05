@@ -217,12 +217,21 @@ class TranslatorApp(rumps.App):
             if not os.path.exists(venv_python):
                 venv_python = "python3"
                 
-            subprocess.Popen(
+            self.daemon_process = subprocess.Popen(
                 [venv_python, daemon_script],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
                 start_new_session=True
             )
+            
+            import atexit
+            def cleanup_daemon():
+                if hasattr(self, 'daemon_process') and self.daemon_process:
+                    try:
+                        self.daemon_process.terminate()
+                    except:
+                        pass
+            atexit.register(cleanup_daemon)
         except Exception as e:
             print(f"Error starting UI Daemon: {e}")
 
@@ -490,6 +499,17 @@ class TranslatorApp(rumps.App):
         ])
         
         print(">>> 准备重启应用...")
+        
+        # 发送退出信号给旧的 UI Daemon
+        import socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1.0)
+            s.connect(('127.0.0.1', 50051))
+            s.sendall(json.dumps({'action': 'quit'}).encode('utf-8'))
+            s.close()
+        except: pass
+
         # 启动一个新的独立进程来运行这个脚本
         subprocess.Popen(
             [sys.executable, sys.argv[0]],

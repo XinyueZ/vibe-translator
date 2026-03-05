@@ -596,7 +596,12 @@ class TranslatorUI:
                     try:
                         payload = json.loads(data)
                         if payload.get('action') == 'quit':
-                            self.root.after(0, self.root.quit)
+                            def force_quit():
+                                self.root.quit()
+                                self.root.destroy()
+                                import os
+                                os._exit(0)
+                            self.root.after(0, force_quit)
                             break
                         # Important: Schedule update_content on the main Tkinter thread
                         self.root.after(0, lambda p=payload: self.update_content(p))
