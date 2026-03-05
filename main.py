@@ -153,22 +153,38 @@ class TranslatorApp(rumps.App):
         threading.Thread(target=listener, daemon=True).start()
 
     def init_vertexai(self):
-        """Initialize Google VertexAI client"""
+        """Initialize Google GenAI client (VertexAI or AI Studio)"""
         try:
-            # Configure VertexAI
-            project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
-            location = os.getenv('GOOGLE_CLOUD_LOCATION')
+            use_vertex = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'False').lower() in ('true', '1', 't', 'yes')
 
-            # Initialize client
-            self.client = genai.Client(
-                vertexai=True,
-                project=project_id,
-                location=location
-            )
-            print(f"✓ VertexAI initialized: {project_id} @ {location}")
+            if use_vertex:
+                # Configure VertexAI
+                project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
+                location = os.getenv('GOOGLE_CLOUD_LOCATION')
+                if not project_id or not location:
+                    raise ValueError("Missing GOOGLE_CLOUD_PROJECT or GOOGLE_CLOUD_LOCATION for VertexAI.")
+                    
+                # Initialize client
+                self.client = genai.Client(
+                    vertexai=True,
+                    project=project_id,
+                    location=location
+                )
+                print(f"✓ VertexAI initialized: {project_id} @ {location}")
+            else:
+                # Configure AI Studio
+                api_key = os.getenv('GOOGLE_AI_STUDIO_API_KEY')
+                if not api_key:
+                    raise ValueError("Illegal State: GOOGLE_GENAI_USE_VERTEXAI is False, but GOOGLE_AI_STUDIO_API_KEY is missing.")
+                
+                # Initialize client
+                self.client = genai.Client(api_key=api_key)
+                print(f"✓ Google AI Studio initialized with API Key")
+                
         except Exception as e:
-            print(f"✗ Failed to initialize VertexAI: {e}")
-            rumps.alert("初始化失败", f"无法连接到 VertexAI:\n{e}")
+            print(f"✗ Failed to initialize AI Client: {e}")
+            rumps.alert("AI 初始化失败", f"配置错误或缺失:\n{e}\n\n请检查 .env 文件。")
+            self.client = None
             
         # Start UI Daemon automatically
         self.start_ui_daemon()

@@ -40,22 +40,31 @@ pip install -r requirements.txt
 
 3. **Configure environment variables**
 
-Create a `.env` file with your Google Cloud credentials:
+Create a `.env` file with your credentials:
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and add your VertexAI configuration:
-```
-GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=global
-GOOGLE_GENAI_USE_VERTEXAI=True
+Edit `.env` and configure your preferred AI provider:
 
-# Model Configuration
+**Option A: Google AI Studio (Easiest)**
+```
+GOOGLE_GENAI_USE_VERTEXAI=False
+GOOGLE_AI_STUDIO_API_KEY=your_api_key_here
+
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
-> **Note**: To ensure your Google Cloud authentication remains active, it is recommended to run `gcloud auth application-default login` in your terminal every 24 hours to refresh your credentials. Or use the "Auth 刷新授权" button from the menu bar or widget right-click menu.
+**Option B: Google Cloud Vertex AI (Enterprise)**
+```
+GOOGLE_GENAI_USE_VERTEXAI=True
+GOOGLE_CLOUD_PROJECT=your-project-id
+GOOGLE_CLOUD_LOCATION=global
+
+GEMINI_MODEL=gemini-3.1-flash-lite-preview
+```
+
+> **Note for Vertex AI users**: To ensure your Google Cloud authentication remains active, it is recommended to run `gcloud auth application-default login` in your terminal every 24 hours to refresh your credentials. Or use the "Auth 刷新授权" button from the menu bar or widget right-click menu.
 
 4. **Grant macOS Accessibility Permission**
    - Open **System Settings** → **Privacy & Security** → **Accessibility**
@@ -155,22 +164,31 @@ pip install -r requirements.txt
 
 3. **配置环境变量**
 
-创建 `.env` 文件并填入你的 Google Cloud 凭证：
+创建 `.env` 文件并填入你的凭证：
 ```bash
 cp .env.example .env
 ```
 
-编辑 `.env` 文件，添加你的 VertexAI 配置：
-```
-GOOGLE_CLOUD_PROJECT=你的项目ID
-GOOGLE_CLOUD_LOCATION=global
-GOOGLE_GENAI_USE_VERTEXAI=True
+编辑 `.env` 文件，根据你想要使用的 AI 平台进行配置：
 
-# 模型配置
+**选项 A：Google AI Studio API Key（最简单）**
+```
+GOOGLE_GENAI_USE_VERTEXAI=False
+GOOGLE_AI_STUDIO_API_KEY=你的_api_key
+
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
-> **注意**：为了确保您的 Google Cloud 身份验证保持有效，建议每 24 小时在终端中运行一次 `gcloud auth application-default login` 以刷新您的凭证。或者使用菜单栏/悬浮球右键菜单中的 "Auth 刷新授权" 按钮。
+**选项 B：Google Cloud Vertex AI（企业级）**
+```
+GOOGLE_GENAI_USE_VERTEXAI=True
+GOOGLE_CLOUD_PROJECT=你的项目ID
+GOOGLE_CLOUD_LOCATION=global
+
+GEMINI_MODEL=gemini-3.1-flash-lite-preview
+```
+
+> **Vertex AI 用户注意**：为了确保您的 Google Cloud 身份验证保持有效，建议每 24 小时在终端中运行一次 `gcloud auth application-default login` 以刷新您的凭证。或者使用菜单栏/悬浮球右键菜单中的 "Auth 刷新授权" 按钮。
 
 4. **授予 macOS 辅助功能权限**
    - 打开 **系统设置** → **隐私与安全性** → **辅助功能**

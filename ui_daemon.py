@@ -132,9 +132,21 @@ class TranslatorUI:
         self.t = self.i18n[self.ui_lang]
         
         try:
-            self.client = genai.Client(vertexai=True, project=os.getenv('GOOGLE_CLOUD_PROJECT'), location=os.getenv('GOOGLE_CLOUD_LOCATION'))
+            use_vertex = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'False').lower() in ('true', '1', 't', 'yes')
+            
+            if use_vertex:
+                project_id = os.getenv('GOOGLE_CLOUD_PROJECT')
+                location = os.getenv('GOOGLE_CLOUD_LOCATION')
+                if not project_id or not location:
+                    raise ValueError("Missing GOOGLE_CLOUD_PROJECT or GOOGLE_CLOUD_LOCATION")
+                self.client = genai.Client(vertexai=True, project=project_id, location=location)
+            else:
+                api_key = os.getenv('GOOGLE_AI_STUDIO_API_KEY')
+                if not api_key:
+                    raise ValueError("Illegal State: GOOGLE_AI_STUDIO_API_KEY is missing when VertexAI is disabled")
+                self.client = genai.Client(api_key=api_key)
         except Exception as e:
-            print(f"Failed to init VertexAI: {e}")
+            print(f"Failed to init GenAI Client: {e}")
             self.client = None
 
         # Base invisible root
