@@ -32,7 +32,7 @@ A macOS menu bar translation application powered by **Google Gemini** (Supports 
 - 🎯 **Text Selection** - Select text anywhere and translate instantly
 - 💬 **Elegant UI** - Clean, theme-aware dialog with resizable windows
 - ⚡ **Fast Translation** - Powered by Gemini 3.1 Flash Lite Preview
-- 🔑 **Flexible Authentication** - Use a simple Google AI Studio API Key or enterprise Google Cloud Vertex AI credentials
+- 🔑 **No Third-Party Dependencies** - Completely independent. No subscription to third-party tools required. Simply use your own enterprise Google Cloud Vertex AI credentials, or get a free API Key from [Google AI Studio](https://aistudio.google.com/u/0/api-keys) to start translating immediately.
 - 🌓 **Theme Support** - Automatically adapts to macOS dark/light mode
 
 ### Installation
@@ -170,7 +170,7 @@ MIT
 - 🎯 **文本选择** - 在任何地方选中文本即可翻译
 - 💬 **优雅界面** - 简洁、跟随系统主题、可调整大小的对话框
 - ⚡ **快速翻译** - 使用 Gemini 3.1 Flash Lite Preview 模型
-- 🔑 **灵活授权** - 支持使用极简的 Google AI Studio API Key，或企业级 Google Cloud Vertex AI 凭证
+- 🔑 **无第三方依赖，完全独立** - 本程序完全不需要依赖任何第三方翻译软件或代理服务。只要您有自己的企业级 Google Cloud Vertex AI 后台，或者在 [Google AI Studio](https://aistudio.google.com/u/0/api-keys) 申请了（免费的）API Key，填入配置后即可直接使用！
 - 🌓 **主题支持** - 自动适配 macOS 深色/浅色模式
 
 ### 安装步骤
