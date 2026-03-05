@@ -6,6 +6,7 @@ This runs in a separate process to avoid threading issues
 
 import sys
 import os
+import json
 import tkinter as tk
 from tkinter import scrolledtext
 import subprocess
@@ -16,6 +17,36 @@ from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
+
+# Configuration file path
+CONFIG_FILE = os.path.expanduser('~/.vibe_translator_config.json')
+
+
+def load_config():
+    """Load saved configuration"""
+    default_config = {
+        'window_width': 680,
+        'window_height': 400,
+        'font_size': 12
+    }
+    try:
+        if os.path.exists(CONFIG_FILE):
+            with open(CONFIG_FILE, 'r') as f:
+                config = json.load(f)
+                # Merge with defaults to handle missing keys
+                return {**default_config, **config}
+    except Exception as e:
+        print(f"Error loading config: {e}")
+    return default_config
+
+
+def save_config(config):
+    """Save configuration"""
+    try:
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(config, f, indent=2)
+    except Exception as e:
+        print(f"Error saving config: {e}")
 
 
 def is_dark_mode():
@@ -103,6 +134,9 @@ def show_result(original, translation, source_lang, target_lang):
     root = tk.Tk()
     root.title(f"翻译完成: {source_lang} → {target_lang}")
 
+    # Load saved configuration
+    config = load_config()
+
     # Initialize VertexAI client
     try:
         client = genai.Client(
@@ -114,9 +148,9 @@ def show_result(original, translation, source_lang, target_lang):
         print(f"Failed to initialize VertexAI: {e}")
         client = None
 
-    # Window size - slightly taller to accommodate style selector
-    window_width = 680
-    window_height = 400
+    # Window size from config
+    window_width = config['window_width']
+    window_height = config['window_height']
 
     # Center window on screen
     screen_width = root.winfo_screenwidth()
@@ -205,7 +239,7 @@ def show_result(original, translation, source_lang, target_lang):
 
     # Font size selector
     font_sizes = [10, 12, 14, 16, 18, 20, 24]
-    font_size_var = tk.IntVar(value=12)  # Default to 12
+    font_size_var = tk.IntVar(value=config['font_size'])  # Load from config
 
     font_size_label = tk.Label(
         title_frame,
@@ -282,10 +316,13 @@ def show_result(original, translation, source_lang, target_lang):
     )
     orig_label.pack(fill=tk.X, pady=(0, 5))
 
+    # Calculate initial spacing based on saved font size
+    initial_spacing = round(config['font_size'] * 0.309)
+
     orig_text = scrolledtext.ScrolledText(
         main_frame,
         wrap=tk.WORD,
-        font=("Arial", 12),
+        font=("Arial", config['font_size']),
         height=5,  # Initial 5 lines
         width=60,
         relief=tk.SOLID,
@@ -293,9 +330,9 @@ def show_result(original, translation, source_lang, target_lang):
         bg=colors['textbox_bg'],
         fg=colors['fg'],
         insertbackground=colors['fg'],  # Cursor color
-        spacing1=4,  # Space before each line (Golden ratio: font_size * φ ≈ 19.4, leading ≈ 7.4)
+        spacing1=initial_spacing,  # Space before each line (Golden ratio)
         spacing2=0,  # Space between wrapped lines
-        spacing3=4   # Space after each line
+        spacing3=initial_spacing   # Space after each line
     )
     # Allow textbox to expand proportionally (takes 1 part of available space)
     orig_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
@@ -316,7 +353,7 @@ def show_result(original, translation, source_lang, target_lang):
     trans_text = scrolledtext.ScrolledText(
         main_frame,
         wrap=tk.WORD,
-        font=("Arial", 12),
+        font=("Arial", config['font_size']),
         height=5,  # Initial 5 lines
         width=60,
         relief=tk.SOLID,
@@ -324,9 +361,9 @@ def show_result(original, translation, source_lang, target_lang):
         bg=colors['textbox_bg'],
         fg=colors['fg'],
         insertbackground=colors['fg'],  # Cursor color
-        spacing1=4,  # Space before each line (Golden ratio: font_size * φ ≈ 19.4, leading ≈ 7.4)
+        spacing1=initial_spacing,  # Space before each line (Golden ratio)
         spacing2=0,  # Space between wrapped lines
-        spacing3=4   # Space after each line
+        spacing3=initial_spacing   # Space after each line
     )
     # Allow textbox to expand proportionally (takes 1 part of available space)
     trans_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
@@ -347,6 +384,9 @@ def show_result(original, translation, source_lang, target_lang):
         # Update font size and spacing for both text boxes
         orig_text.config(font=("Arial", size), spacing1=spacing, spacing3=spacing)
         trans_text.config(font=("Arial", size), spacing1=spacing, spacing3=spacing)
+        # Save font size to config
+        config['font_size'] = size
+        save_config(config)
 
     for size in font_sizes:
         font_size_menu.add_command(label=str(size), command=lambda s=size: select_font_size(s))
@@ -454,11 +494,28 @@ def show_result(original, translation, source_lang, target_lang):
             progress_label.config(text="❌ VertexAI 未初始化")
             style_button.config(cursor='hand2')
 
+    # Function to save window size on close
+    def on_window_close():
+        # Get current window geometry
+        geometry = root.geometry()
+        # Parse width and height from geometry string (format: WIDTHxHEIGHT+X+Y)
+        size_part = geometry.split('+')[0]
+        width, height = map(int, size_part.split('x'))
+        # Save to config
+        config['window_width'] = width
+        config['window_height'] = height
+        save_config(config)
+        # Destroy window
+        root.destroy()
+
     # Bind Escape key to close
-    root.bind('<Escape>', lambda e: root.destroy())
+    root.bind('<Escape>', lambda e: on_window_close())
 
     # Also bind Cmd+W to close (macOS standard)
-    root.bind('<Command-w>', lambda e: root.destroy())
+    root.bind('<Command-w>', lambda e: on_window_close())
+
+    # Bind window close button (X button)
+    root.protocol("WM_DELETE_WINDOW", on_window_close)
 
     # Force window to highest level to appear above fullscreen apps
     # This needs to be done after the window is created
