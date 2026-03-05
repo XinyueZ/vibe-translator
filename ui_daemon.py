@@ -231,12 +231,12 @@ class TranslatorUI:
                 self.widget.geometry(f"+{new_x}+{new_y}")
 
         def on_drag_release(event):
-            if not self._is_dragging:
-                self.expand_to_main()
-            else:
+            if self._is_dragging:
                 self.config['widget_x'] = self.widget.winfo_x()
                 self.config['widget_y'] = self.widget.winfo_y()
                 save_config(self.config)
+            # We explicitly removed self.expand_to_main() here
+            # so the main window only opens when an actual translation is triggered.
 
         for ui_element in (self.widget_canvas,):
             ui_element.bind("<ButtonPress-1>", on_drag_start)
