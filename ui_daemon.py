@@ -58,7 +58,7 @@ def get_theme_colors():
     else:
         return {'bg': '#F0F0F0', 'textbox_bg': '#FFFFFF', 'fg': '#000000', 'label_fg': '#000000', 'status_fg': '#00AA00', 'button_bg': '#007AFF'}
 
-def get_style_options(source_lang, target_lang):
+def get_style_options(source_lang, target_lang, config=None):
     direction = f"{source_lang} → {target_lang}"
     
     # Common Chinese styles
