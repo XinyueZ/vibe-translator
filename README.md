@@ -28,7 +28,8 @@ A macOS menu bar translation application powered by **Google Gemini** (Supports 
 - ⏳ **Real-time Progress** - UI instantly expands to show the original text and a friendly loading state while waiting for AI translation
 - 👻 **Omnipresent** - Strictly stays above all other apps and follows you across all macOS Spaces/Desktops automatically
 - 🔄 **Multi-Language Support** - Auto-detect to Chinese, plus translation between Chinese, English, and German
-- 🎨 **Style Options** - Choose translation tones (informal/formal German, regional Chinese dialects, etc.)
+- 🛠️ **Custom Languages & Styles** - Easily add your own language pairs and define custom translation prompts (tones/styles) via the built-in UI
+- 🎨 **Style Options** - Choose translation tones dynamically from the expanded UI dropdown
 - 🎯 **Text Selection** - Select text anywhere and translate instantly
 - 💬 **Elegant UI** - Clean, theme-aware dialog with resizable windows
 - ⚡ **Fast Translation** - Powered by Gemini 3.1 Flash Lite Preview
@@ -166,7 +167,8 @@ MIT
 - ⏳ **实时进度** - 翻译时瞬间展开窗口，显示原文并提示正在为您翻译，告别盲目等待
 - 👻 **无处不在** - 拥有最高系统层级置顶，且会像“幽灵”一样跨越所有 macOS 桌面空间 (Spaces) 跟随你
 - 🔄 **多语言支持** - 自动检测语言并翻译为中文，以及中文、英文、德文互译
-- 🎨 **风格选项** - 选择翻译风格（德语 duzen/Sie、中文地域口音等）
+- 🛠️ **自定义语言与风格** - 支持在软件内可视化添加任意语言对，并为它们定制专属的 Prompt（语气风格），翻译时随意切换
+- 🎨 **风格选项** - 支持在翻译结果界面，一键切换各种内置及您自定义的翻译风格
 - 🎯 **文本选择** - 在任何地方选中文本即可翻译
 - 💬 **优雅界面** - 简洁、跟随系统主题、可调整大小的对话框
 - ⚡ **快速翻译** - 使用 Gemini 3.1 Flash Lite Preview 模型
