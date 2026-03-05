@@ -508,12 +508,16 @@ class TranslatorUI:
         style_prompt_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 5))
         style_prompt_entry.insert(0, "Prompt要求")
         
+        tk.Label(frame3, text="↵", font=("Arial", 16), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT)
+        
         def clear_placeholder(e, entry, text):
             if entry.get() == text:
                 entry.delete(0, tk.END)
                 
         style_name_entry.bind("<FocusIn>", lambda e: clear_placeholder(e, style_name_entry, "名称"))
         style_prompt_entry.bind("<FocusIn>", lambda e: clear_placeholder(e, style_prompt_entry, "Prompt要求"))
+        
+        
         
         def add_style():
             name = style_name_entry.get().strip()
@@ -535,10 +539,12 @@ class TranslatorUI:
             style_name_entry.delete(0, tk.END)
             style_prompt_entry.delete(0, tk.END)
             
-        # Use Label for custom button styling on macOS
-        add_btn = tk.Label(frame3, text="  +  ", bg=self.colors['button_bg'], fg='white', font=("Arial", 14, "bold"), cursor="hand2")
-        add_btn.pack(side=tk.LEFT, padx=5)
-        add_btn.bind("<Button-1>", lambda e: add_style())
+        # Bind Enter key to add_style instead of a button
+        def on_enter_press(e):
+            add_style()
+        style_prompt_entry.bind("<Return>", on_enter_press)
+        style_name_entry.bind("<Return>", on_enter_press)
+        
 
         # Row 4: Save
         frame4 = tk.Frame(main_frame, bg=self.colors['bg'])
