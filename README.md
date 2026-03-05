@@ -290,3 +290,13 @@ MIT
 ![GitHub top language](https://img.shields.io/github/languages/top/XinyueZ/vibe-translator)
 ![GitHub last commit](https://img.shields.io/github/last-commit/XinyueZ/vibe-translator)
 ![Visitors](https://api.visitorbadge.io/api/visitors?path=XinyueZ%2Fvibe-translator&countColor=%23263759&style=flat)
+
+## Star History
+
+<a href="https://star-history.com/#XinyueZ/vibe-translator&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=XinyueZ/vibe-translator&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=XinyueZ/vibe-translator&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=XinyueZ/vibe-translator&type=Date" />
+ </picture>
+</a>
