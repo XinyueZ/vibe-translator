@@ -601,7 +601,7 @@ class TranslatorUI:
 
         # Use Label for custom button styling on macOS with floppy disk emoji
         save_btn = tk.Label(frame4, text="💾", font=("Arial", 36), bg=self.colors['bg'], cursor="hand2")
-        save_btn.pack()
+        save_btn.pack(side=tk.RIGHT)
         save_btn.bind("<Button-1>", lambda e: save_lang())
         
     def show_error_dialog(self, msg, title="错误"):
