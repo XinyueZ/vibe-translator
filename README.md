@@ -23,7 +23,7 @@ A macOS menu bar translation application powered by **Google Gemini** (Supports 
 
 - 🌍 **Menu Bar Integration** - Lives in your macOS menu bar
 - 🎈 **Floating Widget** - Persistent, draggable desktop widget that expands to show translations instantly without spawning new windows
-- 🖱️ **Widget Context Menu** - Ctrl+Click the floating widget to access all translation options directly without reaching for the menu bar
+- 🖱️ **Widget Context Menu** - Hold Ctrl to move to the widget, then Ctrl+Click to access all translation options directly without reaching for the menu bar
 - 🌐 **Bilingual UI** - Easily toggle the entire application interface between English and Chinese
 - ⏳ **Real-time Progress** - UI instantly expands to show the original text and a friendly loading state while waiting for AI translation
 - 👻 **Omnipresent** - Strictly stays above all other apps and follows you across all macOS Spaces/Desktops automatically
@@ -107,7 +107,7 @@ Keep the Terminal window open (you can minimize it).
 1. You'll see a 🌍 icon in your menu bar (top-right corner) AND a persistent floating 🌍 widget on your desktop
 2. You can left-click and drag the floating widget anywhere on your screen
 3. Select text anywhere in macOS
-4. **Ctrl+Click** the floating widget (or click the menu bar icon) and choose your translation direction (e.g. Auto-Detect → Chinese)
+4. After selecting text, **hold the Ctrl key** to move your mouse to the widget, then **Ctrl+Click** it (or click the menu bar icon) and choose your translation direction (e.g. Auto-Detect → Chinese)
 5. The app instantly expands to show your original text and a loading indicator
 6. Once translated, the result appears and is copied to your clipboard
 7. Press `Esc` or `Cmd+W` to close the dialog and collapse it back to a floating widget
@@ -161,7 +161,7 @@ MIT
 
 - 🌍 **菜单栏集成** - 常驻在 macOS 菜单栏
 - 🎈 **圆组件** - 常驻桌面、可随意拖拽的圆，瞬间展开显示翻译结果，告别反复弹窗
-- 🖱️ **圆菜单** - 直接 **Ctrl+鼠标左键点击** 圆即可呼出所有翻译选项，无需再将鼠标移至屏幕顶部
+- 🖱️ **圆菜单** - 选中文本后，按住 Ctrl 键移动鼠标至圆上，再保持 **Ctrl+鼠标左键点击** 即可呼出所有翻译选项，无需再将鼠标移至屏幕顶部
 - 🌐 **双语界面** - 一键切换应用程序的所有界面为全中文或全英文
 - ⏳ **实时进度** - 翻译时瞬间展开窗口，显示原文并提示正在为您翻译，告别盲目等待
 - 👻 **无处不在** - 拥有最高系统层级置顶，且会像“幽灵”一样跨越所有 macOS 桌面空间 (Spaces) 跟随你
@@ -245,7 +245,7 @@ python main.py
 1. 你会在菜单栏右上角看到 🌍 图标，并且在桌面上会看到一个常驻的 🌍 圆
 2. 你可以按住鼠标左键随意拖拽圆
 3. 在 macOS 任何地方选中文本
-4. 在圆上使用 **Ctrl+鼠标左键点击**，选择翻译方向（如：自动检测 → 中文）
+4. 选中文本后，**按住 Ctrl 键**将鼠标移至圆上，并保持 **Ctrl+鼠标左键点击**以打开翻译选项（如：自动检测 → 中文）
 5. 圆会瞬间展开，显示你选中的原文和加载动画
 6. 翻译完成后，结果会自动显示并复制到剪贴板
 7. 按 `Esc` 或 `Cmd+W` 关闭结果窗口，它会自动缩回变成圆

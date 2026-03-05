@@ -377,9 +377,9 @@ class TranslatorUI:
         self.toast_win.configure(bg=self.colors['bg'], highlightthickness=1, highlightbackground=self.colors['fg'])
         
         if self.ui_lang == 'zh':
-            msg = "💡 使用方法:\n\n1. 在任何地方选中文本\n2. 按 Cmd+C 复制\n3. 在圆上使用「Ctrl+鼠标左键」点击，选择翻译功能\n\n(开启「鼠标跟随」后圆会自动靠近鼠标)"
+            msg = "💡 使用方法:\n\n1. 在任何地方选中文本\n2. 按 Cmd+C 复制\n3. 选中文本后，按住 Ctrl 键将鼠标移至圆上，并保持 Ctrl+鼠标左键点击以打开翻译选项\n\n(开启「鼠标跟随」后圆会自动靠近鼠标)"
         else:
-            msg = "💡 How to Use:\n\n1. Select text anywhere\n2. Press Cmd+C to copy\n3. Ctrl+Click on the widget to select translation options\n\n(Enable 'Mouse Follow' for easier access)"
+            msg = "💡 How to Use:\n\n1. Select text anywhere\n2. Press Cmd+C to copy\n3. Hold Ctrl, move mouse to the widget, then Ctrl+Click to select translation options\n\n(Enable 'Mouse Follow' for easier access)"
             
         lbl = tk.Label(
             self.toast_win, 
