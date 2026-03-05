@@ -250,6 +250,13 @@ class TranslatorUI:
         self.context_menu.add_command(label=self.t['auto_zh'], command=lambda: self.send_command_to_main('auto_zh'))
         self.context_menu.add_separator()
         self.context_menu.add_command(label=self.t['add_lang'], command=lambda: self.send_command_to_main('add_lang'))
+        
+        # Add custom languages
+        if 'custom_langs' in self.config:
+            for cl in self.config['custom_langs']:
+                label_text = f"{cl['source']} → {cl['target']}"
+                self.context_menu.add_command(label=label_text, command=lambda cid=cl['id']: self.send_command_to_main(f'custom_translate_{cid}'))
+                
         self.context_menu.add_command(label=self.t['zh_de'], command=lambda: self.send_command_to_main('zh_de'))
         self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
         self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
@@ -436,6 +443,156 @@ class TranslatorUI:
         
         fade_in()
 
+
+    def show_add_lang_dialog(self):
+        if hasattr(self, 'add_lang_win') and self.add_lang_win.winfo_exists():
+            self.add_lang_win.lift()
+            self.add_lang_win.focus_force()
+            return
+            
+        self.add_lang_win = tk.Toplevel(self.root)
+        self.add_lang_win.title("添加翻译语言 / Add Language")
+        self.add_lang_win.configure(bg=self.colors['bg'], padx=20, pady=20)
+        self.add_lang_win.attributes('-topmost', True)
+        
+        # Center window
+        w = 400
+        h = 300
+        sw = self.add_lang_win.winfo_screenwidth()
+        sh = self.add_lang_win.winfo_screenheight()
+        x = (sw - w) // 2
+        y = (sh - h) // 2
+        self.add_lang_win.geometry(f"{w}x{h}+{x}+{y}")
+        
+        # Variables
+        self.custom_styles_dict = {}
+        
+        # Row 1: Source -> Target
+        frame1 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame1.pack(fill=tk.X, pady=(0, 15))
+        
+        source_entry = tk.Entry(frame1, width=10, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
+        source_entry.pack(side=tk.LEFT)
+        
+        tk.Label(frame1, text=" -> ", bg=self.colors['bg'], fg=self.colors['fg']).pack(side=tk.LEFT, padx=5)
+        
+        target_entry = tk.Entry(frame1, width=10, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
+        target_entry.pack(side=tk.LEFT)
+        
+        # Row 2: Default Style
+        frame2 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame2.pack(fill=tk.X, pady=(0, 15))
+        tk.Label(frame2, text="默认风格 / Default Prompt:", bg=self.colors['bg'], fg=self.colors['fg']).pack(side=tk.LEFT)
+        default_style_entry = tk.Entry(frame2, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
+        default_style_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(10, 0))
+        
+        # Row 3: Styles
+        frame3 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame3.pack(fill=tk.X, pady=(0, 15))
+        
+        self.style_combo_var = tk.StringVar(value="默认")
+        style_combo = tk.OptionMenu(frame3, self.style_combo_var, "默认")
+        style_combo.config(bg=self.colors['button_bg'], fg='white', activebackground=self.colors.get('button_hover', self.colors['button_bg']), activeforeground='white', borderwidth=0, highlightthickness=0, width=8)
+        style_combo.pack(side=tk.LEFT)
+        
+        tk.Label(frame3, text="语气风格:", bg=self.colors['bg'], fg=self.colors['fg']).pack(side=tk.LEFT, padx=(10, 5))
+        
+        style_name_entry = tk.Entry(frame3, width=8, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
+        style_name_entry.pack(side=tk.LEFT)
+        style_name_entry.insert(0, "名称")
+        
+        style_prompt_entry = tk.Entry(frame3, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
+        style_prompt_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 5))
+        style_prompt_entry.insert(0, "Prompt要求")
+        
+        def clear_placeholder(e, entry, text):
+            if entry.get() == text:
+                entry.delete(0, tk.END)
+                
+        style_name_entry.bind("<FocusIn>", lambda e: clear_placeholder(e, style_name_entry, "名称"))
+        style_prompt_entry.bind("<FocusIn>", lambda e: clear_placeholder(e, style_prompt_entry, "Prompt要求"))
+        
+        def add_style():
+            name = style_name_entry.get().strip()
+            prompt = style_prompt_entry.get().strip()
+            if not name or name == "名称" or not prompt or prompt == "Prompt要求":
+                self.show_error_dialog("风格名称和Prompt不能为空！")
+                return
+            
+            self.custom_styles_dict[name] = prompt
+            
+            # Update menu
+            menu = style_combo["menu"]
+            menu.delete(0, "end")
+            menu.add_command(label="默认", command=lambda value="默认": self.style_combo_var.set(value))
+            for k in self.custom_styles_dict.keys():
+                menu.add_command(label=k, command=lambda value=k: self.style_combo_var.set(value))
+                
+            self.style_combo_var.set(name)
+            style_name_entry.delete(0, tk.END)
+            style_prompt_entry.delete(0, tk.END)
+            
+        add_btn = tk.Button(frame3, text="+", command=add_style, bg=self.colors['button_bg'], fg='white', borderwidth=0)
+        add_btn.pack(side=tk.LEFT)
+
+        # Row 4: Save
+        frame4 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame4.pack(fill=tk.X, pady=(20, 0))
+        
+        def save_lang():
+            src = source_entry.get().strip()
+            tgt = target_entry.get().strip()
+            def_style = default_style_entry.get().strip()
+            
+            if not src or not tgt:
+                self.show_error_dialog("源语言和目标语言不能为空！")
+                return
+            if not def_style:
+                self.show_error_dialog("默认风格不能为空！必须提供一个基础翻译指令。")
+                return
+                
+            # Add to config
+            if 'custom_langs' not in self.config:
+                self.config['custom_langs'] = []
+                
+            lang_id = f"custom_{len(self.config['custom_langs']) + 1}"
+            
+            self.config['custom_langs'].append({
+                "id": lang_id,
+                "source": src,
+                "target": tgt,
+                "default_style": def_style,
+                "styles": self.custom_styles_dict
+            })
+            
+            save_config(self.config)
+            
+            # Tell main app to reload config and update menu
+            self.send_command_to_main('reload_config')
+            
+            self.add_lang_win.destroy()
+            
+            rumps_msg = "自定义语言已保存！应用将自动刷新菜单。"
+            self.show_error_dialog(rumps_msg, title="成功")
+
+        save_btn = tk.Button(frame4, text="存储 / Save", command=save_lang, bg=self.colors['button_bg'], fg='white', borderwidth=0, padx=20, pady=5)
+        save_btn.pack()
+        
+    def show_error_dialog(self, msg, title="错误"):
+        err_win = tk.Toplevel(self.add_lang_win if hasattr(self, 'add_lang_win') and self.add_lang_win.winfo_exists() else self.root)
+        err_win.title(title)
+        err_win.attributes('-topmost', True)
+        err_win.configure(bg=self.colors['bg'], padx=20, pady=20)
+        tk.Label(err_win, text=msg, bg=self.colors['bg'], fg=self.colors['fg'], wraplength=250).pack(pady=(0,15))
+        tk.Button(err_win, text="OK", command=err_win.destroy).pack()
+        
+        err_win.update_idletasks()
+        w = err_win.winfo_width()
+        h = err_win.winfo_height()
+        sw = err_win.winfo_screenwidth()
+        sh = err_win.winfo_screenheight()
+        err_win.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
+
     def send_command_to_main(self, cmd):
         """Send a menu command to the main.py tray application"""
         import socket
@@ -566,7 +723,7 @@ class TranslatorUI:
 
     def update_style_menu(self):
         self.style_menu.delete(0, tk.END)
-        self.style_options = get_style_options(self.current_source_lang, self.current_target_lang)
+        self.style_options = get_style_options(self.current_source_lang, self.current_target_lang, self.config)
         self.style_var.set(self.style_options[0])
         
         for option in self.style_options:
@@ -588,6 +745,16 @@ class TranslatorUI:
         def translate_with_style():
             try:
                 style_instruction = f"请使用{selected_style}风格进行翻译。"
+                
+                # Check if it's a custom language style
+                direction = f"{self.current_source_lang} → {self.current_target_lang}"
+                if 'custom_langs' in self.config:
+                    for cl in self.config['custom_langs']:
+                        if f"{cl['source']} → {cl['target']}" == direction:
+                            if selected_style in cl.get('styles', {}):
+                                style_instruction = cl['styles'][selected_style]
+                            break
+
                 prompt = f"请将以下完整文本从{self.current_source_lang}翻译成{self.current_target_lang}。\n\n{style_instruction}\n\n重要要求：\n1. 翻译所有内容，包括所有行和段落\n2. 保持原文的换行和格式\n3. 只返回翻译结果，不要添加任何解释或说明\n\n原文：\n{self.current_original}\n\n译文："
                 
                 response = self.client.models.generate_content(
@@ -752,6 +919,13 @@ class TranslatorUI:
                             break
                         elif payload.get('action') == 'show_how_to_use':
                             self.show_toast()
+                        elif payload.get('action') == 'show_add_lang_dialog':
+                            self.root.after(0, self.show_add_lang_dialog)
+                        elif payload.get('action') == 'reload_ui_config':
+                            self.config = load_config()
+                            # NOTE: To fully refresh the context menu dynamically requires a bit more logic,
+                            # For simplicity, telling the user to restart or wait for daemon refresh is okay,
+                            # but we can just quit and let main restart us if needed, or we just ignore for now and require app restart.
                         elif payload.get('action') == 'toggle_mouse_follow':
                             self.mouse_follow = payload.get('state', False)
                             self.config['mouse_follow'] = self.mouse_follow

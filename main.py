@@ -95,6 +95,17 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             None,  # Separator
             rumps.MenuItem(t['add_lang'], callback=self.add_translation_language),
+        ]
+        
+        # Add custom languages
+        if 'custom_langs' in self.config:
+            for cl in self.config['custom_langs']:
+                label_text = f"{cl['source']} → {cl['target']}"
+                # Use a closure to capture the ID
+                item = rumps.MenuItem(label_text, callback=lambda _, cid=cl['id']: self.translate_custom(cid))
+                self.menu.append(item)
+                
+        self.menu.extend([
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
             rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
             rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
@@ -107,7 +118,7 @@ class TranslatorApp(rumps.App):
             None,  # Separator
             rumps.MenuItem(t['auth'], callback=self.refresh_auth),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
-        ]
+        ])
 
 
     def show_how_to_use(self, _):
@@ -161,7 +172,20 @@ class TranslatorApp(rumps.App):
                     if data:
                         cmd = data.strip()
                         print(f">>> Received command from widget: {cmd}")
-                        if cmd == 'auto_zh': self.translate_auto_to_zh(None)
+                        if cmd.startswith('custom_translate_'):
+                            cid = cmd.replace('custom_translate_', '')
+                            self.translate_custom(cid)
+                        elif cmd == 'reload_config':
+                            # Restart app to refresh menus
+                            import os, sys, subprocess
+                            subprocess.Popen(
+                                [sys.executable, sys.argv[0]],
+                                stdout=subprocess.DEVNULL,
+                                stderr=subprocess.DEVNULL,
+                                start_new_session=True
+                            )
+                            rumps.quit_application()
+                        elif cmd == 'auto_zh': self.translate_auto_to_zh(None)
                         elif cmd == 'add_lang': self.add_translation_language(None)
                         elif cmd == 'zh_de': self.translate_zh_to_de(None)
                         elif cmd == 'de_zh': self.translate_de_to_zh(None)
@@ -263,12 +287,26 @@ class TranslatorApp(rumps.App):
 
 
     def add_translation_language(self, _):
-        # Placeholder for future feature
-        rumps.notification(
-            title="提示 / Notice",
-            subtitle="",
-            message="此功能即将推出 / This feature is coming soon"
-        )
+        self._send_to_daemon({'action': 'show_add_lang_dialog'})
+
+
+    def translate_custom(self, cid):
+        print(f">>> Menu clicked: Custom translate {cid}")
+        # Reload config to ensure we have latest
+        self.config = load_config()
+        custom_lang = next((c for c in self.config.get('custom_langs', []) if c['id'] == cid), None)
+        
+        if not custom_lang:
+            print("Custom lang not found.")
+            return
+            
+        import sys
+        sys.stdout.flush()
+        text = self.get_selected_text()
+        if text:
+            print(f">>> Got text, starting translation: {text[:50]}...")
+            sys.stdout.flush()
+            self.translate_text(text, custom_lang['source'], custom_lang['target'], custom_lang['target'], custom_lang_id=cid)
 
     def translate_auto_to_zh(self, _):
         """自动检测 → 中文"""
@@ -377,7 +415,7 @@ class TranslatorApp(rumps.App):
         except Exception as e:
             print(f"Error sending to UI Daemon: {e}")
 
-    def translate_text(self, text, source_lang, target_lang, target_lang_en):
+    def translate_text(self, text, source_lang, target_lang, target_lang_en, custom_lang_id=None):
         """Translate text using VertexAI"""
         try:
             rumps.notification(
@@ -399,17 +437,23 @@ class TranslatorApp(rumps.App):
         # Perform translation in background thread
         threading.Thread(
             target=self._perform_translation,
-            args=(text, source_lang, target_lang, target_lang_en),
+            args=(text, source_lang, target_lang, target_lang_en, custom_lang_id),
             daemon=True
         ).start()
 
-    def _perform_translation(self, text, source_lang, target_lang, target_lang_en):
+    def _perform_translation(self, text, source_lang, target_lang, target_lang_en, custom_lang_id=None):
         """Perform translation in background thread"""
         try:
-            if target_lang == "德文":
+            style_instruction = ""
+            if custom_lang_id:
+                # Need to get style instruction from config
+                self.config = load_config()
+                custom_lang = next((c for c in self.config.get('custom_langs', []) if c['id'] == custom_lang_id), None)
+                if custom_lang:
+                    style_instruction = custom_lang.get('default_style', '') + " "
+                    
+            elif target_lang == "德文":
                 style_instruction = "Use duzen (informal 'you') for the German translation. "
-            else:
-                style_instruction = ""
 
             prompt = f"Translate the following text from {source_lang} to {target_lang}. {style_instruction}Only return the translation, no explanations:\n\n{text}"
 
