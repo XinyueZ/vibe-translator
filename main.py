@@ -95,6 +95,10 @@ class TranslatorApp(rumps.App):
         # Translation options in menu
         menu_items = [
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
+            rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
+            rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
+            rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
+            rumps.MenuItem(t['en_zh'], callback=self.translate_en_to_zh),
             None,  # Separator
             rumps.MenuItem(t['add_lang'], callback=self.add_translation_language),
         ]
@@ -112,11 +116,6 @@ class TranslatorApp(rumps.App):
         menu_items.append(None) # Separator for the group
                 
         menu_items.extend([
-            rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
-            rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
-            rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
-            rumps.MenuItem(t['en_zh'], callback=self.translate_en_to_zh),
-            None,  # Separator
             self.mouse_follow_item,
             rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
@@ -215,6 +214,10 @@ class TranslatorApp(rumps.App):
         
         menu_items = [
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
+            rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
+            rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
+            rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
+            rumps.MenuItem(t['en_zh'], callback=self.translate_en_to_zh),
             None,  # Separator
             rumps.MenuItem(t['add_lang'], callback=self.add_translation_language),
         ]
@@ -232,11 +235,6 @@ class TranslatorApp(rumps.App):
         menu_items.append(None) # Separator
                 
         menu_items.extend([
-            rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
-            rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
-            rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
-            rumps.MenuItem(t['en_zh'], callback=self.translate_en_to_zh),
-            None,  # Separator
             self.mouse_follow_item,
             rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),

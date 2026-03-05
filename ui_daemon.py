@@ -720,6 +720,10 @@ class TranslatorUI:
             
         self.context_menu = tk.Menu(self.widget, tearoff=0)
         self.context_menu.add_command(label=self.t['auto_zh'], command=lambda: self.send_command_to_main('auto_zh'))
+        self.context_menu.add_command(label=self.t['zh_de'], command=lambda: self.send_command_to_main('zh_de'))
+        self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
+        self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
+        self.context_menu.add_command(label=self.t['en_zh'], command=lambda: self.send_command_to_main('en_zh'))
         self.context_menu.add_separator()
         
         # Custom Languages Group
@@ -732,11 +736,6 @@ class TranslatorUI:
                 label_text = f"• {cl['source']} → {cl['target']}"
                 self.context_menu.add_command(label=label_text, command=lambda cid=cl['id']: self.send_command_to_main(f'custom_translate_{cid}'))
         
-        self.context_menu.add_separator()
-        self.context_menu.add_command(label=self.t['zh_de'], command=lambda: self.send_command_to_main('zh_de'))
-        self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
-        self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
-        self.context_menu.add_command(label=self.t['en_zh'], command=lambda: self.send_command_to_main('en_zh'))
         self.context_menu.add_separator()
         
         self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', True))
