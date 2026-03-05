@@ -456,7 +456,7 @@ def show_result(original, translation, source_lang, target_lang):
 
                 # Call VertexAI
                 response = client.models.generate_content(
-                    model='gemini-3.1-flash-lite-preview',
+                    model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
                     contents=prompt
                 )
 

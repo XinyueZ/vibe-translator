@@ -45,6 +45,9 @@ Edit `.env` and add your VertexAI configuration:
 GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=global
 GOOGLE_GENAI_USE_VERTEXAI=True
+
+# Model Configuration
+GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
 4. **Grant macOS Accessibility Permission**
@@ -150,6 +153,9 @@ cp .env.example .env
 GOOGLE_CLOUD_PROJECT=你的项目ID
 GOOGLE_CLOUD_LOCATION=global
 GOOGLE_GENAI_USE_VERTEXAI=True
+
+# 模型配置
+GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
 4. **授予 macOS 辅助功能权限**
