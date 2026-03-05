@@ -452,7 +452,10 @@ class TranslatorUI:
             
         self.add_lang_win = tk.Toplevel(self.root)
         self.add_lang_win.title("添加翻译语言 / Add Language")
-        self.add_lang_win.configure(bg=self.colors['bg'], padx=20, pady=20)
+        self.add_lang_win.configure(bg=self.colors['bg'], padx=30, pady=30)
+        # On macOS, setting background of Toplevel directly might not cover everything perfectly without a main frame
+        main_frame = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        main_frame.pack(fill=tk.BOTH, expand=True)
         self.add_lang_win.attributes('-topmost', True)
         
         # Center window
@@ -468,26 +471,26 @@ class TranslatorUI:
         self.custom_styles_dict = {}
         
         # Row 1: Source -> Target
-        frame1 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame1 = tk.Frame(main_frame, bg=self.colors['bg'])
         frame1.pack(fill=tk.X, pady=(0, 15))
         
         source_entry = tk.Entry(frame1, width=10, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
         source_entry.pack(side=tk.LEFT)
         
-        tk.Label(frame1, text=" -> ", bg=self.colors['bg'], fg=self.colors['fg']).pack(side=tk.LEFT, padx=5)
+        tk.Label(frame1, text=" ➔ ", font=("Arial", 14), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT, padx=10)
         
         target_entry = tk.Entry(frame1, width=10, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
         target_entry.pack(side=tk.LEFT)
         
         # Row 2: Default Style
-        frame2 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame2 = tk.Frame(main_frame, bg=self.colors['bg'])
         frame2.pack(fill=tk.X, pady=(0, 15))
-        tk.Label(frame2, text="默认风格 / Default Prompt:", bg=self.colors['bg'], fg=self.colors['fg']).pack(side=tk.LEFT)
+        tk.Label(frame2, text="默认风格 / Default Prompt:", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT)
         default_style_entry = tk.Entry(frame2, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
         default_style_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(10, 0))
         
         # Row 3: Styles
-        frame3 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame3 = tk.Frame(main_frame, bg=self.colors['bg'])
         frame3.pack(fill=tk.X, pady=(0, 15))
         
         self.style_combo_var = tk.StringVar(value="默认")
@@ -495,7 +498,7 @@ class TranslatorUI:
         style_combo.config(bg=self.colors['button_bg'], fg='white', activebackground=self.colors.get('button_hover', self.colors['button_bg']), activeforeground='white', borderwidth=0, highlightthickness=0, width=8)
         style_combo.pack(side=tk.LEFT)
         
-        tk.Label(frame3, text="语气风格:", bg=self.colors['bg'], fg=self.colors['fg']).pack(side=tk.LEFT, padx=(10, 5))
+        tk.Label(frame3, text="语气风格:", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT, padx=(15, 5))
         
         style_name_entry = tk.Entry(frame3, width=8, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
         style_name_entry.pack(side=tk.LEFT)
@@ -532,11 +535,11 @@ class TranslatorUI:
             style_name_entry.delete(0, tk.END)
             style_prompt_entry.delete(0, tk.END)
             
-        add_btn = tk.Button(frame3, text="+", command=add_style, bg=self.colors['button_bg'], fg='white', borderwidth=0)
+        add_btn = tk.Button(frame3, text=" + ", command=add_style, bg=self.colors['button_bg'], fg='white', borderwidth=0, cursor="hand2")
         add_btn.pack(side=tk.LEFT)
 
         # Row 4: Save
-        frame4 = tk.Frame(self.add_lang_win, bg=self.colors['bg'])
+        frame4 = tk.Frame(main_frame, bg=self.colors['bg'])
         frame4.pack(fill=tk.X, pady=(20, 0))
         
         def save_lang():
@@ -575,7 +578,9 @@ class TranslatorUI:
             rumps_msg = "自定义语言已保存！应用将自动刷新菜单。"
             self.show_error_dialog(rumps_msg, title="成功")
 
-        save_btn = tk.Button(frame4, text="存储 / Save", command=save_lang, bg=self.colors['button_bg'], fg='white', borderwidth=0, padx=20, pady=5)
+        save_btn = tk.Button(frame4, text="存储 / Save", command=save_lang, bg=self.colors['button_bg'], fg='white', borderwidth=0, font=("Arial", 13), cursor="hand2")
+        # On macOS tkinter buttons are tricky to size with padding, so we can use a frame hack or just leave it
+        
         save_btn.pack()
         
     def show_error_dialog(self, msg, title="错误"):
