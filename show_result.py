@@ -203,6 +203,44 @@ def show_result(original, translation, source_lang, target_lang):
     )
     arrow_label.pack(side=tk.LEFT)
 
+    # Font size selector
+    font_sizes = [10, 12, 14, 16, 18, 20, 24]
+    font_size_var = tk.IntVar(value=12)  # Default to 12
+
+    font_size_label = tk.Label(
+        title_frame,
+        text="字体:",
+        font=("Arial", 11),
+        bg=colors['bg'],
+        fg=colors['label_fg']
+    )
+    font_size_label.pack(side=tk.LEFT, padx=(20, 5))
+
+    # Font size button
+    font_size_button = tk.Label(
+        title_frame,
+        text=str(font_size_var.get()),
+        font=("Arial", 10),
+        bg=colors['textbox_bg'],
+        fg=colors['fg'],
+        relief=tk.SOLID,
+        borderwidth=1,
+        padx=8,
+        pady=4,
+        cursor='hand2'
+    )
+    font_size_button.pack(side=tk.LEFT)
+
+    # Font size dropdown arrow
+    font_size_arrow = tk.Label(
+        title_frame,
+        text=" ▼",
+        font=("Arial", 8),
+        bg=colors['bg'],
+        fg=colors['label_fg']
+    )
+    font_size_arrow.pack(side=tk.LEFT)
+
     # Create popup menu for style selection
     style_menu = tk.Menu(root, tearoff=0)
 
@@ -294,6 +332,34 @@ def show_result(original, translation, source_lang, target_lang):
     trans_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
     trans_text.insert(tk.END, translation)
     trans_text.config(state=tk.DISABLED)
+
+    # Font size selection logic (after text boxes are created)
+    font_size_menu = tk.Menu(root, tearoff=0)
+
+    def select_font_size(size):
+        font_size_var.set(size)
+        font_size_button.config(text=str(size))
+        # Calculate line spacing based on golden ratio
+        # Line height = font_size * φ (≈ 1.618)
+        # Leading = line_height - font_size = font_size * 0.618
+        # Spacing (top + bottom) = leading / 2
+        spacing = round(size * 0.309)  # ≈ size * 0.618 / 2
+        # Update font size and spacing for both text boxes
+        orig_text.config(font=("Arial", size), spacing1=spacing, spacing3=spacing)
+        trans_text.config(font=("Arial", size), spacing1=spacing, spacing3=spacing)
+
+    for size in font_sizes:
+        font_size_menu.add_command(label=str(size), command=lambda s=size: select_font_size(s))
+
+    # Show font size menu on click
+    def show_font_size_menu(event):
+        try:
+            font_size_menu.post(event.x_root, event.y_root)
+        finally:
+            font_size_menu.grab_release()
+
+    font_size_button.bind('<Button-1>', show_font_size_menu)
+    font_size_arrow.bind('<Button-1>', show_font_size_menu)
 
     # Status label
     status_label = tk.Label(
