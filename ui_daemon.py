@@ -61,6 +61,15 @@ def get_theme_colors():
 def get_style_options(source_lang, target_lang, config=None):
     direction = f"{source_lang} → {target_lang}"
     
+    # Check custom langs first
+    if config and 'custom_langs' in config:
+        for cl in config['custom_langs']:
+            if f"{cl['source']} → {cl['target']}" == direction:
+                styles = ["默认"]
+                if 'styles' in cl and cl['styles']:
+                    styles.extend(list(cl['styles'].keys()))
+                return styles
+                
     # Common Chinese styles
     chinese_styles = ["默认", "上海海派腔调", "大陆北方腔调", "大陆南方腔调", "台湾腔", "港台腔"]
     
