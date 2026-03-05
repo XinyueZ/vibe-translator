@@ -350,7 +350,7 @@ def show_result(original, translation, source_lang, target_lang):
 
                 # Call VertexAI
                 response = client.models.generate_content(
-                    model='gemini-2.5-flash-lite',
+                    model='gemini-3.1-flash-lite-preview',
                     contents=prompt
                 )
 

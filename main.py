@@ -210,7 +210,7 @@ class TranslatorApp(rumps.App):
             sys.stdout.flush()
 
             response = self.client.models.generate_content(
-                model='gemini-2.5-flash-lite',
+                model='gemini-3.1-flash-lite-preview',
                 contents=prompt
             )
 

@@ -15,7 +15,7 @@ A macOS menu bar translation application powered by Google VertexAI.
 - 🎨 **Style Options** - Choose translation tones (informal/formal German, regional Chinese dialects, etc.)
 - 🎯 **Text Selection** - Select text anywhere and translate instantly
 - 💬 **Elegant UI** - Clean, theme-aware dialog with resizable windows
-- ⚡ **Fast Translation** - Powered by Gemini 2.5 Flash Lite
+- ⚡ **Fast Translation** - Powered by Gemini 3.1 Flash Lite Preview
 - 🌓 **Theme Support** - Automatically adapts to macOS dark/light mode
 
 ### Installation
@@ -43,7 +43,7 @@ cp .env.example .env
 Edit `.env` and add your VertexAI configuration:
 ```
 GOOGLE_CLOUD_PROJECT=your-project-id
-GOOGLE_CLOUD_LOCATION=your-location
+GOOGLE_CLOUD_LOCATION=global
 GOOGLE_GENAI_USE_VERTEXAI=True
 ```
 
@@ -93,7 +93,7 @@ Keep the Terminal window open (you can minimize it).
 - **UI Framework**: rumps (menu bar), tkinter (dialogs)
 - **Clipboard**: pyperclip
 - **AI Model**: Google GenAI SDK with VertexAI
-- **Model**: Gemini 2.5 Flash Lite
+- **Model**: Gemini 3.1 Flash Lite Preview
 - **Platform**: macOS
 
 ### Requirements
@@ -120,7 +120,7 @@ MIT
 - 🎨 **风格选项** - 选择翻译风格（德语 duzen/Sie、中文地域口音等）
 - 🎯 **文本选择** - 在任何地方选中文本即可翻译
 - 💬 **优雅界面** - 简洁、跟随系统主题、可调整大小的对话框
-- ⚡ **快速翻译** - 使用 Gemini 2.5 Flash Lite 模型
+- ⚡ **快速翻译** - 使用 Gemini 3.1 Flash Lite Preview 模型
 - 🌓 **主题支持** - 自动适配 macOS 深色/浅色模式
 
 ### 安装步骤
@@ -148,7 +148,7 @@ cp .env.example .env
 编辑 `.env` 文件，添加你的 VertexAI 配置：
 ```
 GOOGLE_CLOUD_PROJECT=你的项目ID
-GOOGLE_CLOUD_LOCATION=你的区域
+GOOGLE_CLOUD_LOCATION=global
 GOOGLE_GENAI_USE_VERTEXAI=True
 ```
 
@@ -198,7 +198,7 @@ python main.py
 - **UI 框架**: rumps（菜单栏）、tkinter（对话框）
 - **剪贴板**: pyperclip
 - **AI 模型**: Google GenAI SDK with VertexAI
-- **模型**: Gemini 2.5 Flash Lite
+- **模型**: Gemini 3.1 Flash Lite Preview
 - **平台**: macOS
 
 ### 系统要求
