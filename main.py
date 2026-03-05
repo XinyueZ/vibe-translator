@@ -306,70 +306,19 @@ class TranslatorApp(rumps.App):
             self.translate_text(text, "英文", "中文", "Chinese")
 
     def get_selected_text(self):
-        """Get currently selected text by simulating Cmd+C"""
+        """Get currently selected text by using the clipboard."""
         try:
-            import time
-            import subprocess
+            import pyperclip
 
-            # Save current clipboard content
-            original_clipboard = pyperclip.paste()
-            
-            # --- FOCUS FIX for Floating Widget ---
-            # When the user clicks the floating widget, Python (Tkinter) steals focus.
-            # We must aggressively hide our own app to force macOS to return focus
-            # to the previous application (e.g. Browser/Editor) BEFORE simulating Cmd+C.
-            subprocess.run(
-                ["osascript", "-e", 'tell application "System Events" to set visible of first process whose unix id is ' + str(os.getpid()) + ' to false'],
-                capture_output=True
-            )
-            # Give macOS a tiny fraction of a second to switch the active window back
-            time.sleep(0.1)
-            # -------------------------------------
-
-            # Simulate Cmd+C to copy selected text using osascript
-            result = subprocess.run(
-                ["osascript", "-e", 'tell application "System Events" to keystroke "c" using {command down}'],
-                capture_output=True,
-                text=True,
-                timeout=2
-            )
-
-            # Check if osascript failed (permission denied)
-            if result.returncode != 0:
-                error_msg = result.stderr.strip()
-                if "not allowed" in error_msg or "1002" in error_msg:
-                    # Permission issue
-                    from AppKit import NSAlert, NSCriticalAlertStyle
-                    alert = NSAlert.alloc().init()
-                    alert.setMessageText_("需要辅助功能权限")
-                    alert.setInformativeText_(
-                        "请按以下步骤授权：\n\n"
-                        "1. 打开 系统设置\n"
-                        "2. 进入 隐私与安全性 → 辅助功能\n"
-                        "3. 点击 + 添加 Terminal\n"
-                        "4. 勾选启用\n\n"
-                        "授权后立即生效，无需重启程序。"
-                    )
-                    alert.addButtonWithTitle_("确定")
-                    alert.setAlertStyle_(NSCriticalAlertStyle)
-                    alert.window().setLevel_(101)
-                    alert.runModal()
-                    return None
-                else:
-                    print(f"osascript error: {error_msg}")
-                    return None
-
-            time.sleep(0.3)  # Wait for copy to complete
-
-            # Get new clipboard content
+            # Get clipboard content directly
             selected_text = pyperclip.paste()
 
-            # Check if we got new text
+            # Check if we got text
             if not selected_text or not selected_text.strip():
                 from AppKit import NSAlert, NSInformationalAlertStyle
                 alert = NSAlert.alloc().init()
                 alert.setMessageText_("提示")
-                alert.setInformativeText_("请先选择要翻译的文本，然后再点击菜单选项。")
+                alert.setInformativeText_("剪贴板为空。\n\n请先使用 Cmd+C 复制要翻译的文本，然后再点击翻译选项。")
                 alert.addButtonWithTitle_("确定")
                 alert.setAlertStyle_(NSInformationalAlertStyle)
                 alert.window().setLevel_(101)
