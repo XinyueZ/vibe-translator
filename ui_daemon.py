@@ -92,27 +92,49 @@ class TranslatorUI:
         # Place in saved position or bottom right corner
         self.widget_x = self.config.get('widget_x', self.root.winfo_screenwidth() - 80)
         self.widget_y = self.config.get('widget_y', self.root.winfo_screenheight() - 100)
-        self.widget.geometry(f"50x50+{self.widget_x}+{self.widget_y}")
+        self.widget.geometry(f"60x65+{self.widget_x}+{self.widget_y}")
         
-        self.widget_lbl = tk.Label(self.widget, text="🌍", font=("Arial", 24), bg=self.colors['button_bg'], fg='white', cursor="hand2")
-        self.widget_lbl.pack(expand=True, fill='both')
+        # Create a frame to hold icon and text
+        self.widget_frame = tk.Frame(self.widget, bg=self.colors['button_bg'])
+        self.widget_frame.pack(expand=True, fill='both')
+
+        self.widget_lbl = tk.Label(self.widget_frame, text="🌍", font=("Arial", 24), bg=self.colors['button_bg'], fg='white', cursor="hand2")
+        self.widget_lbl.pack(pady=(5, 0))
+        
+        self.widget_hint = tk.Label(self.widget_frame, text="ctrl+鼠标", font=("Arial", 9), bg=self.colors['button_bg'], fg='white', cursor="hand2")
+        self.widget_hint.pack(pady=(0, 2))
         
         # Dragging logic variables
         self._drag_start_x = 0
         self._drag_start_y = 0
+        self._win_start_x = 0
+        self._win_start_y = 0
         self._is_dragging = False
 
         def on_drag_start(event):
-            self._drag_start_x = event.x
-            self._drag_start_y = event.y
+            # Record the absolute screen coordinates of the mouse click
+            self._drag_start_x = event.x_root
+            self._drag_start_y = event.y_root
+            # Record the initial window position
+            self._win_start_x = self.widget.winfo_x()
+            self._win_start_y = self.widget.winfo_y()
             self._is_dragging = False
 
         def on_drag_motion(event):
-            # Calculate new position
-            x = self.widget.winfo_x() - self._drag_start_x + event.x
-            y = self.widget.winfo_y() - self._drag_start_y + event.y
-            self.widget.geometry(f"+{x}+{y}")
-            self._is_dragging = True
+            # Calculate delta based on absolute screen coordinates
+            dx = event.x_root - self._drag_start_x
+            dy = event.y_root - self._drag_start_y
+            
+            # Require at least 3 pixels of movement to be considered a drag
+            # to prevent accidental drags on sloppy clicks
+            if not self._is_dragging and (abs(dx) > 3 or abs(dy) > 3):
+                self._is_dragging = True
+                
+            if self._is_dragging:
+                # Apply delta to the original window position
+                new_x = self._win_start_x + dx
+                new_y = self._win_start_y + dy
+                self.widget.geometry(f"+{new_x}+{new_y}")
 
         def on_drag_release(event):
             if not self._is_dragging:
@@ -124,9 +146,34 @@ class TranslatorUI:
                 self.config['widget_y'] = self.widget.winfo_y()
                 save_config(self.config)
 
-        self.widget_lbl.bind("<ButtonPress-1>", on_drag_start)
-        self.widget_lbl.bind("<B1-Motion>", on_drag_motion)
-        self.widget_lbl.bind("<ButtonRelease-1>", on_drag_release)
+        # Bind events to all parts of the widget so dragging/clicking works everywhere
+        for ui_element in (self.widget_lbl, self.widget_hint, self.widget_frame):
+            ui_element.bind("<ButtonPress-1>", on_drag_start)
+            ui_element.bind("<B1-Motion>", on_drag_motion)
+            ui_element.bind("<ButtonRelease-1>", on_drag_release)
+
+        # Context Menu for the widget
+        self.context_menu = tk.Menu(self.widget, tearoff=0)
+        self.context_menu.add_command(label="中文 → 德文", command=lambda: self.send_command_to_main('zh_de'))
+        self.context_menu.add_command(label="德文 → 中文", command=lambda: self.send_command_to_main('de_zh'))
+        self.context_menu.add_command(label="中文 → 英文", command=lambda: self.send_command_to_main('zh_en'))
+        self.context_menu.add_command(label="英文 → 中文", command=lambda: self.send_command_to_main('en_zh'))
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="Auth 刷新授权", command=lambda: self.send_command_to_main('auth'))
+        self.context_menu.add_separator()
+        self.context_menu.add_command(label="退出", command=lambda: self.send_command_to_main('quit'))
+
+        def show_context_menu(event):
+            try:
+                self.context_menu.post(event.x_root, event.y_root)
+            finally:
+                self.context_menu.grab_release()
+
+        # Bind right-click for macOS
+        for ui_element in (self.widget_lbl, self.widget_hint, self.widget_frame):
+            ui_element.bind("<Button-2>", show_context_menu)
+            ui_element.bind("<Button-3>", show_context_menu)
+            ui_element.bind("<Control-Button-1>", show_context_menu)
 
         # ---------------- MAIN WINDOW ----------------
         self.main_win = tk.Toplevel(self.root)
@@ -149,6 +196,18 @@ class TranslatorUI:
         # Force strict topmost using PyObjC after windows are mapped
         self.root.after(100, self._force_strict_topmost)
 
+    def send_command_to_main(self, cmd):
+        """Send a menu command to the main.py tray application"""
+        import socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1.0)
+            s.connect(('127.0.0.1', 50052))
+            s.sendall(cmd.encode('utf-8'))
+            s.close()
+        except Exception as e:
+            print(f"Failed to send command to main app: {e}")
+
     def _force_strict_topmost(self):
         """Use macOS native APIs to ensure windows stay above absolutely everything and cross spaces"""
         try:
@@ -162,6 +221,14 @@ class TranslatorUI:
                 # 16 = NSWindowCollectionBehaviorStationary (Unaffected by Expose/Mission Control)
                 # 17 = 1 | 16
                 window.setCollectionBehavior_(17) 
+                
+                # If this is the small widget window (not the main window which needs text input),
+                # prevent it from becoming the key window so it doesn't steal focus from browsers
+                # when right-clicked.
+                if window.frame().size.width < 100:
+                    # NSWindowStyleMaskNonactivatingPanel = 1 << 7
+                    # This prevents the app from activating when the window is clicked
+                    window.setStyleMask_(window.styleMask() | 128)
         except Exception as e:
             print(f"Notice: Could not set strict macOS topmost/spaces level: {e}")
 
@@ -352,31 +419,72 @@ class TranslatorUI:
             pass
 
     def update_content(self, payload):
-        """Update UI with new translation payload"""
-        self.current_original = payload.get('original', '')
-        translation = payload.get('translation', '')
-        self.current_source_lang = payload.get('source_lang', '')
-        self.current_target_lang = payload.get('target_lang', '')
-
-        self.title_label.config(text=f"翻译完成: {self.current_source_lang} → {self.current_target_lang}")
+        """Update UI based on translation status payload"""
+        status = payload.get('status', 'complete')
         
-        # Update style options for the new translation direction
-        self.update_style_menu()
-        
-        self.orig_text.config(state=tk.NORMAL)
-        self.orig_text.delete(1.0, tk.END)
-        self.orig_text.insert(tk.END, self.current_original)
-        self.orig_text.config(state=tk.DISABLED)
+        if status == 'loading':
+            self.current_original = payload.get('original', '')
+            self.current_source_lang = payload.get('source_lang', '')
+            self.current_target_lang = payload.get('target_lang', '')
 
-        self.trans_text.config(state=tk.NORMAL)
-        self.trans_text.delete(1.0, tk.END)
-        self.trans_text.insert(tk.END, translation)
-        self.trans_text.config(state=tk.DISABLED)
+            self.title_label.config(text=f"正在翻译: {self.current_source_lang} → {self.current_target_lang}...")
+            self.update_style_menu()
+            
+            self.orig_text.config(state=tk.NORMAL)
+            self.orig_text.delete(1.0, tk.END)
+            self.orig_text.insert(tk.END, self.current_original)
+            self.orig_text.config(state=tk.DISABLED)
 
-        pyperclip.copy(translation)
-        
-        # Expand automatically when new translation arrives
-        self.expand_to_main()
+            self.trans_text.config(state=tk.NORMAL)
+            self.trans_text.delete(1.0, tk.END)
+            self.trans_text.insert(tk.END, "⏳ 正在呼叫 VertexAI 进行翻译，请稍候...")
+            self.trans_text.config(state=tk.DISABLED)
+            
+            self.progress_label.config(text="")
+            self.status_label.config(text="翻译中...", fg=self.colors['label_fg'])
+            
+            self.expand_to_main()
+            
+        elif status == 'complete':
+            # We might receive a complete payload from the legacy format or direct complete
+            translation = payload.get('translation', '')
+            
+            # Update languages if provided (might just be a style update)
+            if 'source_lang' in payload:
+                self.current_source_lang = payload.get('source_lang', '')
+                self.current_target_lang = payload.get('target_lang', '')
+                self.current_original = payload.get('original', '')
+                self.update_style_menu()
+
+            self.title_label.config(text=f"翻译完成: {self.current_source_lang} → {self.current_target_lang}")
+            
+            self.orig_text.config(state=tk.NORMAL)
+            self.orig_text.delete(1.0, tk.END)
+            self.orig_text.insert(tk.END, self.current_original)
+            self.orig_text.config(state=tk.DISABLED)
+
+            self.trans_text.config(state=tk.NORMAL)
+            self.trans_text.delete(1.0, tk.END)
+            self.trans_text.insert(tk.END, translation)
+            self.trans_text.config(state=tk.DISABLED)
+
+            self.status_label.config(text="✓ 译文已复制 (按 Esc 收起)", fg=self.colors['status_fg'])
+            
+            # If the window is somehow hidden, expand it
+            if not self.main_win.winfo_viewable():
+                self.expand_to_main()
+                
+        elif status == 'error':
+            error_msg = payload.get('error_msg', 'Unknown error')
+            self.title_label.config(text="❌ 翻译失败")
+            self.trans_text.config(state=tk.NORMAL)
+            self.trans_text.delete(1.0, tk.END)
+            self.trans_text.insert(tk.END, f"翻译过程中发生错误：\n{error_msg}")
+            self.trans_text.config(state=tk.DISABLED)
+            self.status_label.config(text="请检查网络或配置", fg='red')
+            
+            if not self.main_win.winfo_viewable():
+                self.expand_to_main()
 
     def _start_server(self):
         """Socket server to receive payloads from main.py"""

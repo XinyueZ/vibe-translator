@@ -12,6 +12,8 @@ A macOS menu bar translation application powered by Google VertexAI.
 
 - 🌍 **Menu Bar Integration** - Lives in your macOS menu bar
 - 🎈 **Floating Widget** - Persistent, draggable desktop widget that expands to show translations instantly without spawning new windows
+- 🖱️ **Widget Context Menu** - Right-click (or Ctrl+Click) the floating widget to access all translation options directly without reaching for the menu bar
+- ⏳ **Real-time Progress** - UI instantly expands to show the original text and a loading state while waiting for AI translation
 - 👻 **Omnipresent** - Strictly stays above all other apps and follows you across all macOS Spaces/Desktops automatically
 - 🔄 **Multi-Language Support** - Translate between Chinese, English, and German
 - 🎨 **Style Options** - Choose translation tones (informal/formal German, regional Chinese dialects, etc.)
@@ -52,7 +54,7 @@ GOOGLE_GENAI_USE_VERTEXAI=True
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
-> **Note**: To ensure your Google Cloud authentication remains active, it is recommended to run `gcloud auth application-default login` in your terminal every 24 hours to refresh your credentials. Or use the "Auth 刷新授权" button from the menu bar.
+> **Note**: To ensure your Google Cloud authentication remains active, it is recommended to run `gcloud auth application-default login` in your terminal every 24 hours to refresh your credentials. Or use the "Auth 刷新授权" button from the menu bar or widget right-click menu.
 
 4. **Grant macOS Accessibility Permission**
    - Open **System Settings** → **Privacy & Security** → **Accessibility**
@@ -79,11 +81,12 @@ Keep the Terminal window open (you can minimize it).
 **Translation Steps:**
 
 1. You'll see a 🌍 icon in your menu bar (top-right corner) AND a persistent floating 🌍 widget on your desktop
-2. You can drag the floating widget anywhere on your screen
+2. You can left-click and drag the floating widget anywhere on your screen
 3. Select text anywhere in macOS
-4. Click the menu bar 🌍 icon and choose translation direction
-5. The app automatically captures selected text, translates, and instantly expands the floating widget into a beautiful result dialog
-6. Press `Esc` or `Cmd+W` to close the dialog and collapse it back to a floating widget
+4. **Right-click** (or Ctrl+Click) the floating widget (or click the menu bar icon) and choose your translation direction
+5. The app instantly expands to show your original text and a loading indicator
+6. Once translated, the result appears and is copied to your clipboard
+7. Press `Esc` or `Cmd+W` to close the dialog and collapse it back to a floating widget
 
 ### Translation Styles
 
@@ -120,6 +123,8 @@ MIT
 
 - 🌍 **菜单栏集成** - 常驻在 macOS 菜单栏
 - 🎈 **悬浮组件** - 常驻桌面、可随意拖拽的悬浮球，瞬间展开显示翻译结果，告别反复弹窗
+- 🖱️ **悬浮球右键菜单** - 直接右键（或 Ctrl+点击）悬浮球即可呼出所有翻译选项，无需再将鼠标移至屏幕顶部
+- ⏳ **实时进度** - 翻译时瞬间展开窗口，显示原文并提示正在呼叫 AI，告别盲目等待
 - 👻 **无处不在** - 拥有最高系统层级置顶，且会像“幽灵”一样跨越所有 macOS 桌面空间 (Spaces) 跟随你
 - 🔄 **多语言支持** - 中文、英文、德文互译
 - 🎨 **风格选项** - 选择翻译风格（德语 duzen/Sie、中文地域口音等）
@@ -160,7 +165,7 @@ GOOGLE_GENAI_USE_VERTEXAI=True
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
-> **注意**：为了确保您的 Google Cloud 身份验证保持有效，建议每 24 小时在终端中运行一次 `gcloud auth application-default login` 以刷新您的凭证。或者使用菜单栏中的 "Auth 刷新授权" 按钮。
+> **注意**：为了确保您的 Google Cloud 身份验证保持有效，建议每 24 小时在终端中运行一次 `gcloud auth application-default login` 以刷新您的凭证。或者使用菜单栏/悬浮球右键菜单中的 "Auth 刷新授权" 按钮。
 
 4. **授予 macOS 辅助功能权限**
    - 打开 **系统设置** → **隐私与安全性** → **辅助功能**
@@ -187,11 +192,12 @@ python main.py
 **翻译步骤：**
 
 1. 你会在菜单栏右上角看到 🌍 图标，并且在桌面上会看到一个常驻的 🌍 悬浮球
-2. 你可以用鼠标拖拽悬浮球到屏幕的任意位置
+2. 你可以按住鼠标左键随意拖拽悬浮球
 3. 在 macOS 任何地方选中文本
-4. 点击菜单栏的 🌍 图标并选择翻译方向
-5. 应用会自动获取选中的文本并翻译，悬浮球会瞬间展开成一个优雅的翻译结果窗口
-6. 按 `Esc` 或 `Cmd+W` 关闭结果窗口，它会自动缩回变成悬浮球
+4. **右键点击**（或 Ctrl+点击）悬浮球，选择翻译方向（也可使用顶部菜单栏）
+5. 悬浮球会瞬间展开，显示你选中的原文和加载动画
+6. 翻译完成后，结果会自动显示并复制到剪贴板
+7. 按 `Esc` 或 `Cmd+W` 关闭结果窗口，它会自动缩回变成悬浮球
 
 ### 翻译风格
 

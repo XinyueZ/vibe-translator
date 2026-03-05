@@ -30,6 +30,9 @@ class TranslatorApp(rumps.App):
         # Initialize VertexAI client
         self.init_vertexai()
 
+        # Start background listener for widget commands
+        self.start_command_listener()
+
         # Translation options in menu
         self.menu = [
             rumps.MenuItem("中文 → 德文", callback=self.translate_zh_to_de),
@@ -41,6 +44,34 @@ class TranslatorApp(rumps.App):
             None,  # Separator
             rumps.MenuItem("退出", callback=self.quit_app)
         ]
+
+    def start_command_listener(self):
+        """Listen for commands triggered from the floating widget"""
+        def listener():
+            import socket
+            server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            try:
+                server.bind(('127.0.0.1', 50052))
+                server.listen(5)
+                print(">>> Main app listening for widget commands on port 50052")
+                while True:
+                    conn, addr = server.accept()
+                    data = conn.recv(1024).decode('utf-8')
+                    if data:
+                        cmd = data.strip()
+                        print(f">>> Received command from widget: {cmd}")
+                        if cmd == 'zh_de': self.translate_zh_to_de(None)
+                        elif cmd == 'de_zh': self.translate_de_to_zh(None)
+                        elif cmd == 'zh_en': self.translate_zh_to_en(None)
+                        elif cmd == 'en_zh': self.translate_en_to_zh(None)
+                        elif cmd == 'auth': self.refresh_auth(None)
+                        elif cmd == 'quit': self.quit_app(None)
+                    conn.close()
+            except Exception as e:
+                print(f"Command listener error: {e}")
+        
+        threading.Thread(target=listener, daemon=True).start()
 
     def init_vertexai(self):
         """Initialize Google VertexAI client"""
@@ -145,6 +176,18 @@ class TranslatorApp(rumps.App):
 
             # Save current clipboard content
             original_clipboard = pyperclip.paste()
+            
+            # --- FOCUS FIX for Floating Widget ---
+            # When the user clicks the floating widget, Python (Tkinter) steals focus.
+            # We must aggressively hide our own app to force macOS to return focus
+            # to the previous application (e.g. Browser/Editor) BEFORE simulating Cmd+C.
+            subprocess.run(
+                ["osascript", "-e", 'tell application "System Events" to set visible of first process whose unix id is ' + str(os.getpid()) + ' to false'],
+                capture_output=True
+            )
+            # Give macOS a tiny fraction of a second to switch the active window back
+            time.sleep(0.1)
+            # -------------------------------------
 
             # Simulate Cmd+C to copy selected text using osascript
             result = subprocess.run(
@@ -205,9 +248,31 @@ class TranslatorApp(rumps.App):
             traceback.print_exc()
             return None
 
+    def _send_to_daemon(self, payload_dict):
+        """Helper to send data to UI Daemon"""
+        import socket
+        import json
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(2.0)
+            try:
+                s.connect(('127.0.0.1', 50051))
+                s.sendall(json.dumps(payload_dict).encode('utf-8'))
+            except ConnectionRefusedError:
+                print(">>> UI Daemon not running. Restarting it...")
+                self.start_ui_daemon()
+                import time
+                time.sleep(1)
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect(('127.0.0.1', 50051))
+                s.sendall(json.dumps(payload_dict).encode('utf-8'))
+            finally:
+                s.close()
+        except Exception as e:
+            print(f"Error sending to UI Daemon: {e}")
+
     def translate_text(self, text, source_lang, target_lang, target_lang_en):
         """Translate text using VertexAI"""
-        # Show notification that translation is starting
         try:
             rumps.notification(
                 title=f"翻译中: {source_lang} → {target_lang}",
@@ -216,6 +281,14 @@ class TranslatorApp(rumps.App):
             )
         except Exception as e:
             print(f"Notification error: {e}")
+
+        # Send initial "loading" state to UI Daemon so it pops up immediately
+        self._send_to_daemon({
+            'status': 'loading',
+            'original': text,
+            'source_lang': source_lang,
+            'target_lang': target_lang
+        })
 
         # Perform translation in background thread
         threading.Thread(
@@ -227,8 +300,6 @@ class TranslatorApp(rumps.App):
     def _perform_translation(self, text, source_lang, target_lang, target_lang_en):
         """Perform translation in background thread"""
         try:
-            # Create prompt with default style
-            # For German, default to duzen (informal "you")
             if target_lang == "德文":
                 style_instruction = "Use duzen (informal 'you') for the German translation. "
             else:
@@ -236,84 +307,41 @@ class TranslatorApp(rumps.App):
 
             prompt = f"Translate the following text from {source_lang} to {target_lang}. {style_instruction}Only return the translation, no explanations:\n\n{text}"
 
-            print(f">>> Translating from {source_lang} to {target_lang}...")
-            import sys
-            sys.stdout.flush()
-
-            # Call VertexAI with Gemini 2.5 Flash Lite
-            print(">>> Calling VertexAI...")
-            sys.stdout.flush()
-
             response = self.client.models.generate_content(
                 model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
                 contents=prompt
             )
 
-            print(">>> Got response from VertexAI")
-            sys.stdout.flush()
-
-            # Extract translation
             translation = response.text.strip()
-            print(f">>> Translation completed: {translation[:100]}...")
-            sys.stdout.flush()
-
-            # Copy translation to clipboard
             pyperclip.copy(translation)
 
-            print(f">>> Showing result dialog...")
-            sys.stdout.flush()
-
-            # Show result dialog
-            self._show_result_dialog(text, translation, source_lang, target_lang)
-
-            print(f">>> Translation complete!")
-            sys.stdout.flush()
+            # Send final result to UI Daemon
+            self._send_to_daemon({
+                'status': 'complete',
+                'original': text,
+                'translation': translation,
+                'source_lang': source_lang,
+                'target_lang': target_lang
+            })
 
         except Exception as e:
             print(f"Translation error: {e}")
             import traceback
             traceback.print_exc()
+            
+            # Send error state to UI Daemon
+            self._send_to_daemon({
+                'status': 'error',
+                'error_msg': str(e)
+            })
 
             # Show error dialog
             self._show_error_dialog(str(e))
 
-
+    # _show_result_dialog is no longer needed but we can leave it or remove it.
+    # I will remove it to clean up the code.
     def _show_result_dialog(self, original, translation, source_lang, target_lang):
-        """Show translation result using persistent UI Daemon"""
-        import socket
-        try:
-            # Prepare payload
-            data = {
-                'original': original,
-                'translation': translation,
-                'source_lang': source_lang,
-                'target_lang': target_lang
-            }
-            payload = json.dumps(data)
-            
-            # Send to UI Daemon via socket
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            # Short timeout so menu bar doesn't hang if daemon died
-            s.settimeout(2.0) 
-            try:
-                s.connect(('127.0.0.1', 50051))
-                s.sendall(payload.encode('utf-8'))
-                print(">>> Successfully sent translation to UI Daemon.")
-            except ConnectionRefusedError:
-                print(">>> UI Daemon not running. Restarting it...")
-                self.start_ui_daemon()
-                import time
-                time.sleep(1) # wait for it to boot
-                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                s.connect(('127.0.0.1', 50051))
-                s.sendall(payload.encode('utf-8'))
-            finally:
-                s.close()
-                
-        except Exception as e:
-            print(f"Error sending to UI Daemon: {e}")
-            import traceback
-            traceback.print_exc()
+        pass # Deprecated, replaced by _send_to_daemon
 
     def _show_error_dialog(self, error_msg):
         """Show error dialog"""
