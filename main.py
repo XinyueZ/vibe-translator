@@ -37,6 +37,8 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem("中文 → 英文", callback=self.translate_zh_to_en),
             rumps.MenuItem("英文 → 中文", callback=self.translate_en_to_zh),
             None,  # Separator
+            rumps.MenuItem("Auth 刷新授权", callback=self.refresh_auth),
+            None,  # Separator
             rumps.MenuItem("退出", callback=self.quit_app)
         ]
 
@@ -57,6 +59,39 @@ class TranslatorApp(rumps.App):
         except Exception as e:
             print(f"✗ Failed to initialize VertexAI: {e}")
             rumps.alert("初始化失败", f"无法连接到 VertexAI:\n{e}")
+            
+        # Start UI Daemon automatically
+        self.start_ui_daemon()
+
+    def start_ui_daemon(self):
+        """Ensure UI Daemon is running"""
+        import socket
+        # Check if it's already running by trying to connect
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect(('127.0.0.1', 50051))
+            s.close()
+            print("✓ UI Daemon is already running.")
+            return
+        except ConnectionRefusedError:
+            pass # Not running, we will start it
+            
+        try:
+            print(">>> Starting UI Daemon...")
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            daemon_script = os.path.join(script_dir, "ui_daemon.py")
+            venv_python = os.path.join(script_dir, "venv", "bin", "python")
+            if not os.path.exists(venv_python):
+                venv_python = "python3"
+                
+            subprocess.Popen(
+                [venv_python, daemon_script],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True
+            )
+        except Exception as e:
+            print(f"Error starting UI Daemon: {e}")
 
     def translate_zh_to_de(self, _):
         """中文 → 德文"""
@@ -244,47 +279,39 @@ class TranslatorApp(rumps.App):
 
 
     def _show_result_dialog(self, original, translation, source_lang, target_lang):
-        """Show translation result using separate Python process"""
+        """Show translation result using persistent UI Daemon"""
+        import socket
         try:
-            # Get script path
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            show_result_script = os.path.join(script_dir, "show_result.py")
-
-            # Get python from venv
-            venv_python = os.path.join(script_dir, "venv", "bin", "python")
-            if not os.path.exists(venv_python):
-                venv_python = "python3"
-
-            # Create temporary JSON file with data
+            # Prepare payload
             data = {
                 'original': original,
                 'translation': translation,
                 'source_lang': source_lang,
                 'target_lang': target_lang
             }
-
-            # Write to temp file
-            with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
-                json.dump(data, f)
-                temp_file = f.name
-
-            print(f">>> Created temp file: {temp_file}")
-
-            # Use 'open' command to run Python script - this ensures proper foreground window
-            cmd = f"open -a Terminal {venv_python} {show_result_script} {temp_file}"
-
-            # Actually, let's try using pythonw or direct execution
-            subprocess.Popen(
-                [venv_python, show_result_script, temp_file],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True  # Detach from parent process
-            )
-
-            print(f">>> Window launched")
-
+            payload = json.dumps(data)
+            
+            # Send to UI Daemon via socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            # Short timeout so menu bar doesn't hang if daemon died
+            s.settimeout(2.0) 
+            try:
+                s.connect(('127.0.0.1', 50051))
+                s.sendall(payload.encode('utf-8'))
+                print(">>> Successfully sent translation to UI Daemon.")
+            except ConnectionRefusedError:
+                print(">>> UI Daemon not running. Restarting it...")
+                self.start_ui_daemon()
+                import time
+                time.sleep(1) # wait for it to boot
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.connect(('127.0.0.1', 50051))
+                s.sendall(payload.encode('utf-8'))
+            finally:
+                s.close()
+                
         except Exception as e:
-            print(f"Error showing result dialog: {e}")
+            print(f"Error sending to UI Daemon: {e}")
             import traceback
             traceback.print_exc()
 
@@ -300,8 +327,53 @@ class TranslatorApp(rumps.App):
         except Exception as e:
             print(f"Error showing error dialog: {e}")
 
+    def refresh_auth(self, _):
+        """刷新 Google Cloud 授权并重启应用"""
+        import os
+        import sys
+        import subprocess
+        
+        try:
+            rumps.notification(
+                title="刷新授权",
+                subtitle="正在打开终端...",
+                message="请在浏览器中完成登录，应用正在重启..."
+            )
+        except Exception as e:
+            print(f"Notification error: {e}")
+            
+        print(">>> 正在运行 gcloud auth application-default login...")
+        subprocess.Popen([
+            "osascript", "-e",
+            'tell application "Terminal" to do script "gcloud auth application-default login"'
+        ])
+        
+        print(">>> 准备重启应用...")
+        # 启动一个新的独立进程来运行这个脚本
+        subprocess.Popen(
+            [sys.executable, sys.argv[0]],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True # 脱离当前进程组
+        )
+        
+        # 优雅地退出当前应用实例
+        rumps.quit_application()
+
     def quit_app(self, _):
-        """Quit the application"""
+        """Quit the application and the UI Daemon"""
+        import socket
+        try:
+            # Send quit signal to UI Daemon
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1.0)
+            s.connect(('127.0.0.1', 50051))
+            s.sendall(json.dumps({'action': 'quit'}).encode('utf-8'))
+            s.close()
+            print(">>> Sent quit signal to UI Daemon.")
+        except:
+            pass # Daemon might already be dead
+            
         rumps.quit_application()
 
 
