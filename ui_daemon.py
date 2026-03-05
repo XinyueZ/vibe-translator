@@ -599,10 +599,10 @@ class TranslatorUI:
             
             self.show_error_dialog(success_msg, title="Success" if self.ui_lang == "en" else "成功")
 
-        save_btn = tk.Button(frame4, text="存储 / Save", command=save_lang, bg=self.colors['button_bg'], fg='white', borderwidth=0, font=("Arial", 13), cursor="hand2")
-        # On macOS tkinter buttons are tricky to size with padding, so we can use a frame hack or just leave it
-        
+        # Use Label for custom button styling on macOS with floppy disk emoji
+        save_btn = tk.Label(frame4, text="💾", font=("Arial", 36), bg=self.colors['bg'], cursor="hand2")
         save_btn.pack()
+        save_btn.bind("<Button-1>", lambda e: save_lang())
         
     def show_error_dialog(self, msg, title="错误"):
         err_win = tk.Toplevel(self.add_lang_win if hasattr(self, 'add_lang_win') and self.add_lang_win.winfo_exists() else self.root)
