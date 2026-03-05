@@ -220,14 +220,16 @@ class TranslatorUI:
         try:
             from AppKit import NSApp
             for window in NSApp.windows():
+                # 1000 is NSScreenSaverWindowLevel (Highest reliable level)
                 # 101 is NSPopUpMenuWindowLevel
-                window.setLevel_(101)
+                window.setLevel_(1000)
                 
-                # Collection Behavior:
-                # 1 = NSWindowCollectionBehaviorCanJoinAllSpaces (Appears on all spaces)
-                # 16 = NSWindowCollectionBehaviorStationary (Unaffected by Expose/Mission Control)
-                # 17 = 1 | 16
-                window.setCollectionBehavior_(17) 
+                # Collection Behavior Flags:
+                # 1   (1 << 0) = NSWindowCollectionBehaviorCanJoinAllSpaces (Appears on all spaces)
+                # 16  (1 << 4) = NSWindowCollectionBehaviorStationary (Unaffected by Expose)
+                # 256 (1 << 8) = NSWindowCollectionBehaviorFullScreenAuxiliary (Can appear over fullscreen apps!)
+                # 273 = 1 | 16 | 256
+                window.setCollectionBehavior_(273) 
                 
                 # If this is the small widget window (not the main window which needs text input),
                 # prevent it from becoming the key window so it doesn't steal focus from browsers
