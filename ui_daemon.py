@@ -92,6 +92,7 @@ class TranslatorUI:
             'zh': {
                 'auto_zh': '自动检测 → 中文',
                 'add_lang': '➕ 添加翻译语言',
+                'remove_lang': '➖ 移除翻译语言',
                 'zh_de': '中文 → 德文',
                 'de_zh': '德文 → 中文',
                 'zh_en': '中文 → 英文',
@@ -119,6 +120,7 @@ class TranslatorUI:
             'en': {
                 'auto_zh': 'Auto → ZH',
                 'add_lang': '➕ Add Language',
+                'remove_lang': '➖ Remove Language',
                 'zh_de': 'ZH → DE',
                 'de_zh': 'DE → ZH',
                 'zh_en': 'ZH → EN',
@@ -613,6 +615,51 @@ class TranslatorUI:
         save_btn.pack(side=tk.RIGHT)
         save_btn.bind("<Button-1>", lambda e: save_lang())
         
+
+    def show_remove_lang_dialog(self):
+        if 'custom_langs' not in self.config or not self.config['custom_langs']:
+            self.show_error_dialog("当前没有自定义语言可移除。" if self.ui_lang == 'zh' else "No custom languages to remove.", title="提示" if self.ui_lang == 'zh' else "Info")
+            return
+            
+        rem_win = tk.Toplevel(self.root)
+        rem_win.title("移除翻译语言 / Remove Language")
+        rem_win.configure(bg=self.colors['bg'], padx=30, pady=30)
+        rem_win.attributes('-topmost', True)
+        
+        w = 350
+        h = 200
+        sw = rem_win.winfo_screenwidth()
+        sh = rem_win.winfo_screenheight()
+        rem_win.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
+        
+        tk.Label(rem_win, text="选择要移除的语言组:" if self.ui_lang == 'zh' else "Select language pair to remove:", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(pady=(0, 15))
+        
+        combo_var = tk.StringVar()
+        options = {}
+        for cl in self.config['custom_langs']:
+            label = f"{cl['source']} → {cl['target']}"
+            options[label] = cl['id']
+            
+        first_label = list(options.keys())[0]
+        combo_var.set(first_label)
+        
+        combo = tk.OptionMenu(rem_win, combo_var, *options.keys())
+        combo.config(bg=self.colors['button_bg'], fg='white', borderwidth=0, highlightthickness=0)
+        combo.pack(pady=(0, 20))
+        
+        def do_remove():
+            selected_label = combo_var.get()
+            selected_id = options[selected_label]
+            self.config['custom_langs'] = [cl for cl in self.config['custom_langs'] if cl['id'] != selected_id]
+            save_config(self.config)
+            self.send_command_to_main('reload_config')
+            rem_win.destroy()
+            self.show_error_dialog(f"已移除: {selected_label}" if self.ui_lang == 'zh' else f"Removed: {selected_label}", title="成功" if self.ui_lang == 'zh' else "Success")
+            
+        btn = tk.Label(rem_win, text="🗑️", font=("Arial", 28), bg=self.colors['bg'], cursor="hand2")
+        btn.pack()
+        btn.bind("<Button-1>", lambda e: do_remove())
+
     def show_error_dialog(self, msg, title="错误"):
         err_win = tk.Toplevel(self.add_lang_win if hasattr(self, 'add_lang_win') and self.add_lang_win.winfo_exists() else self.root)
         err_win.title(title)
@@ -674,14 +721,18 @@ class TranslatorUI:
         self.context_menu = tk.Menu(self.widget, tearoff=0)
         self.context_menu.add_command(label=self.t['auto_zh'], command=lambda: self.send_command_to_main('auto_zh'))
         self.context_menu.add_separator()
-        self.context_menu.add_command(label=self.t['add_lang'], command=lambda: self.send_command_to_main('add_lang'))
         
-        # Add custom languages dynamically
+        # Custom Languages Group
+        self.context_menu.add_command(label=self.t['add_lang'], command=lambda: self.send_command_to_main('add_lang'))
+        if 'custom_langs' in self.config and len(self.config['custom_langs']) > 0:
+            self.context_menu.add_command(label=self.t['remove_lang'], command=lambda: self.send_command_to_main('remove_lang'))
+        
         if 'custom_langs' in self.config:
             for cl in self.config['custom_langs']:
-                label_text = f"{cl['source']} → {cl['target']}"
+                label_text = f"• {cl['source']} → {cl['target']}"
                 self.context_menu.add_command(label=label_text, command=lambda cid=cl['id']: self.send_command_to_main(f'custom_translate_{cid}'))
-                
+        
+        self.context_menu.add_separator()
         self.context_menu.add_command(label=self.t['zh_de'], command=lambda: self.send_command_to_main('zh_de'))
         self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
         self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
@@ -992,6 +1043,8 @@ class TranslatorUI:
                             self.show_toast()
                         elif payload.get('action') == 'show_add_lang_dialog':
                             self.root.after(0, self.show_add_lang_dialog)
+                        elif payload.get('action') == 'show_remove_lang_dialog':
+                            self.root.after(0, self.show_remove_lang_dialog)
                         elif payload.get('action') == 'reload_ui_config':
                             self.config = load_config()
                             self._rebuild_context_menu()

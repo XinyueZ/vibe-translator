@@ -52,6 +52,7 @@ class TranslatorApp(rumps.App):
             'zh': {
                 'auto_zh': '自动检测 → 中文',
                 'add_lang': '➕ 添加翻译语言',
+                'remove_lang': '➖ 移除翻译语言',
                 'zh_de': '中文 → 德文',
                 'de_zh': '德文 → 中文',
                 'zh_en': '中文 → 英文',
@@ -66,6 +67,7 @@ class TranslatorApp(rumps.App):
             'en': {
                 'auto_zh': 'Auto → ZH',
                 'add_lang': '➕ Add Language',
+                'remove_lang': '➖ Remove Language',
                 'zh_de': 'ZH → DE',
                 'de_zh': 'DE → ZH',
                 'zh_en': 'ZH → EN',
@@ -97,13 +99,17 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['add_lang'], callback=self.add_translation_language),
         ]
         
+        if 'custom_langs' in self.config and len(self.config['custom_langs']) > 0:
+            menu_items.append(rumps.MenuItem(t['remove_lang'], callback=self.remove_translation_language))
+        
         # Add custom languages
         if 'custom_langs' in self.config:
             for cl in self.config['custom_langs']:
-                label_text = f"{cl['source']} → {cl['target']}"
-                # Use a closure to capture the ID
+                label_text = f"• {cl['source']} → {cl['target']}"
                 item = rumps.MenuItem(label_text, callback=lambda _, cid=cl['id']: self.translate_custom(cid))
                 menu_items.append(item)
+                
+        menu_items.append(None) # Separator for the group
                 
         menu_items.extend([
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
@@ -189,6 +195,7 @@ class TranslatorApp(rumps.App):
                             rumps.quit_application()
                         elif cmd == 'auto_zh': self.translate_auto_to_zh(None)
                         elif cmd == 'add_lang': self.add_translation_language(None)
+                        elif cmd == 'remove_lang': self.remove_translation_language(None)
                         elif cmd == 'zh_de': self.translate_zh_to_de(None)
                         elif cmd == 'de_zh': self.translate_de_to_zh(None)
                         elif cmd == 'zh_en': self.translate_zh_to_en(None)
@@ -287,6 +294,9 @@ class TranslatorApp(rumps.App):
         except Exception as e:
             print(f"Error starting UI Daemon: {e}")
 
+
+    def remove_translation_language(self, _):
+        self._send_to_daemon({'action': 'show_remove_lang_dialog'})
 
     def add_translation_language(self, _):
         self._send_to_daemon({'action': 'show_add_lang_dialog'})
