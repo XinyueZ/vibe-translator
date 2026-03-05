@@ -50,6 +50,8 @@ GOOGLE_GENAI_USE_VERTEXAI=True
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
+> **Note**: To ensure your Google Cloud authentication remains active, it is recommended to run `gcloud auth application-default login` in your terminal every 24 hours to refresh your credentials.
+
 4. **Grant macOS Accessibility Permission**
    - Open **System Settings** → **Privacy & Security** → **Accessibility**
    - Click **+** and add **Terminal** (or your Python executable)
@@ -157,6 +159,8 @@ GOOGLE_GENAI_USE_VERTEXAI=True
 # 模型配置
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
+
+> **注意**：为了确保您的 Google Cloud 身份验证保持有效，建议每 24 小时在终端中运行一次 `gcloud auth application-default login` 以刷新您的凭证。
 
 4. **授予 macOS 辅助功能权限**
    - 打开 **系统设置** → **隐私与安全性** → **辅助功能**
