@@ -74,7 +74,7 @@ GOOGLE_CLOUD_LOCATION=europe-west3
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
-> **🧠 Smart Location Routing**: If you are using Vertex AI and set `GEMINI_MODEL` to a name containing `-preview` (e.g., `gemini-3.1-flash-lite-preview`), the app will **automatically override** your `GOOGLE_CLOUD_LOCATION` and route the request to `europe-west3`. You do not need to manually change your region when testing preview models!
+> **🧠 Smart Location Routing**: If you are using Vertex AI and set `GEMINI_MODEL` to a name containing `-preview` (e.g., `gemini-3.1-flash-lite-preview`), the app will **automatically override** your `GOOGLE_CLOUD_LOCATION` and route the request to `global`. You do not need to manually change your region when testing preview models!
 
 > **Note for Vertex AI users**: To ensure your Google Cloud authentication remains active, it is recommended to run `gcloud auth application-default login` in your terminal every 24 hours to refresh your credentials. Or use the "Auth 刷新授权" button from the menu bar or widget right-click menu.
 
@@ -210,7 +210,7 @@ GOOGLE_CLOUD_LOCATION=europe-west3
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
 ```
 
-> **🧠 智能区域路由**：如果您使用 Vertex AI 并且设置的 `GEMINI_MODEL` 名称中包含 `-preview`（例如 `gemini-3.1-flash-lite-preview`），程序会**自动忽略**您配置的 `GOOGLE_CLOUD_LOCATION`，强制将请求路由到 `europe-west3` 区域。当您在测试预览版模型时，无需反复手动修改区域配置！
+> **🧠 智能区域路由**：如果您使用 Vertex AI 并且设置的 `GEMINI_MODEL` 名称中包含 `-preview`（例如 `gemini-3.1-flash-lite-preview`），程序会**自动忽略**您配置的 `GOOGLE_CLOUD_LOCATION`，强制将请求路由到 `global` 区域。当您在测试预览版模型时，无需反复手动修改区域配置！
 
 > **Vertex AI 用户注意**：为了确保您的 Google Cloud 身份验证保持有效，建议每 24 小时在终端中运行一次 `gcloud auth application-default login` 以刷新您的凭证。或者使用菜单栏/悬浮球右键菜单中的 "Auth 刷新授权" 按钮。
 
