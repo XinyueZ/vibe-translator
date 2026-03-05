@@ -51,6 +51,7 @@ class TranslatorApp(rumps.App):
         self.i18n = {
             'zh': {
                 'auto_zh': '自动检测 → 中文',
+                'add_lang': '➕ 添加翻译语言',
                 'zh_de': '中文 → 德文',
                 'de_zh': '德文 → 中文',
                 'zh_en': '中文 → 英文',
@@ -64,6 +65,7 @@ class TranslatorApp(rumps.App):
             },
             'en': {
                 'auto_zh': 'Auto → ZH',
+                'add_lang': '➕ Add Language',
                 'zh_de': 'ZH → DE',
                 'de_zh': 'DE → ZH',
                 'zh_en': 'ZH → EN',
@@ -92,6 +94,7 @@ class TranslatorApp(rumps.App):
         self.menu = [
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             None,  # Separator
+            rumps.MenuItem(t['add_lang'], callback=self.add_translation_language),
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
             rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
             rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
@@ -159,6 +162,7 @@ class TranslatorApp(rumps.App):
                         cmd = data.strip()
                         print(f">>> Received command from widget: {cmd}")
                         if cmd == 'auto_zh': self.translate_auto_to_zh(None)
+                        elif cmd == 'add_lang': self.add_translation_language(None)
                         elif cmd == 'zh_de': self.translate_zh_to_de(None)
                         elif cmd == 'de_zh': self.translate_de_to_zh(None)
                         elif cmd == 'zh_en': self.translate_zh_to_en(None)
@@ -256,6 +260,15 @@ class TranslatorApp(rumps.App):
             atexit.register(cleanup_daemon)
         except Exception as e:
             print(f"Error starting UI Daemon: {e}")
+
+
+    def add_translation_language(self, _):
+        # Placeholder for future feature
+        rumps.notification(
+            title="提示 / Notice",
+            subtitle="",
+            message="此功能即将推出 / This feature is coming soon"
+        )
 
     def translate_auto_to_zh(self, _):
         """自动检测 → 中文"""

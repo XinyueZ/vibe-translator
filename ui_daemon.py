@@ -82,6 +82,7 @@ class TranslatorUI:
         self.i18n = {
             'zh': {
                 'auto_zh': '自动检测 → 中文',
+                'add_lang': '➕ 添加翻译语言',
                 'zh_de': '中文 → 德文',
                 'de_zh': '德文 → 中文',
                 'zh_en': '中文 → 英文',
@@ -108,6 +109,7 @@ class TranslatorUI:
             },
             'en': {
                 'auto_zh': 'Auto → ZH',
+                'add_lang': '➕ Add Language',
                 'zh_de': 'ZH → DE',
                 'de_zh': 'DE → ZH',
                 'zh_en': 'ZH → EN',
@@ -247,6 +249,7 @@ class TranslatorUI:
         self.context_menu = tk.Menu(self.widget, tearoff=0)
         self.context_menu.add_command(label=self.t['auto_zh'], command=lambda: self.send_command_to_main('auto_zh'))
         self.context_menu.add_separator()
+        self.context_menu.add_command(label=self.t['add_lang'], command=lambda: self.send_command_to_main('add_lang'))
         self.context_menu.add_command(label=self.t['zh_de'], command=lambda: self.send_command_to_main('zh_de'))
         self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
         self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
