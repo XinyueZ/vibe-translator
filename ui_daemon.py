@@ -535,8 +535,10 @@ class TranslatorUI:
             style_name_entry.delete(0, tk.END)
             style_prompt_entry.delete(0, tk.END)
             
-        add_btn = tk.Button(frame3, text=" + ", command=add_style, bg=self.colors['button_bg'], fg='white', borderwidth=0, cursor="hand2")
-        add_btn.pack(side=tk.LEFT)
+        # Use Label for custom button styling on macOS
+        add_btn = tk.Label(frame3, text="  +  ", bg=self.colors['button_bg'], fg='white', font=("Arial", 14, "bold"), cursor="hand2")
+        add_btn.pack(side=tk.LEFT, padx=5)
+        add_btn.bind("<Button-1>", lambda e: add_style())
 
         # Row 4: Save
         frame4 = tk.Frame(main_frame, bg=self.colors['bg'])
