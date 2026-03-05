@@ -14,7 +14,9 @@ A macOS menu bar translation application powered by **Google Gemini** (Supports 
   <img src="assets/screenshot_widget.png" alt="Floating Widget" height="320"/>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="assets/screenshot_main.png" alt="Translation Result" height="320"/>
-  <p><i>Left: Floating widget with context menu. Right: Expanded translation window with style options.</i></p>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/howtous-en.png" alt="How to Use" height="320"/>
+  <p><i>Left: Floating widget. Middle: Translation window. Right: Usage instructions.</i></p>
 </div>
 
 ### Features
@@ -150,7 +152,9 @@ MIT
   <img src="assets/screenshot_widget.png" alt="悬浮球与右键菜单" height="320"/>
   &nbsp;&nbsp;&nbsp;&nbsp;
   <img src="assets/screenshot_main.png" alt="翻译结果主窗口" height="320"/>
-  <p><i>左：常驻桌面的悬浮球及右键菜单。右：瞬间展开的翻译结果主窗口及风格选项。</i></p>
+  &nbsp;&nbsp;&nbsp;&nbsp;
+  <img src="assets/howtouse-zh.png" alt="使用方法" height="320"/>
+  <p><i>左：常驻桌面的悬浮球菜单。中：瞬间展开的翻译结果主窗口。右：使用方法说明。</i></p>
 </div>
 
 ### 功能特性
