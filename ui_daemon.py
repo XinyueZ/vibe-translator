@@ -77,6 +77,59 @@ class TranslatorUI:
     def __init__(self):
         self.config = load_config()
         self.colors = get_theme_colors()
+        self.ui_lang = self.config.get('ui_lang', 'zh')
+        
+        self.i18n = {
+            'zh': {
+                'auto_zh': '自动检测 → 中文',
+                'zh_de': '中文 → 德文',
+                'de_zh': '德文 → 中文',
+                'zh_en': '中文 → 英文',
+                'en_zh': '英文 → 中文',
+                'auth': 'Auth 刷新授权',
+                'ui_zh': '界面中文',
+                'ui_en': '界面英文',
+                'quit': '退出',
+                'ctrl_click': 'ctrl+鼠标',
+                'wait': '等待翻译...',
+                'orig': '原文:',
+                'trans': '译文:',
+                'style': '风格:',
+                'font': '字体:',
+                'copied': '✓ 译文已复制 (按 Esc 收起)',
+                'translating': '正在翻译:',
+                'call_api': '⏳ 正在为您翻译，请稍候...',
+                'trans_done': '翻译完成:',
+                'trans_fail': '❌ 翻译失败',
+                'err_net': '请检查网络或配置',
+                're_trans': '🔄 正在重新翻译...'
+            },
+            'en': {
+                'auto_zh': 'Auto → ZH',
+                'zh_de': 'ZH → DE',
+                'de_zh': 'DE → ZH',
+                'zh_en': 'ZH → EN',
+                'en_zh': 'EN → ZH',
+                'auth': 'Auth Refresh',
+                'ui_zh': 'UI: Chinese',
+                'ui_en': 'UI: English',
+                'quit': 'Quit',
+                'ctrl_click': 'ctrl+click',
+                'wait': 'Waiting for translation...',
+                'orig': 'Original:',
+                'trans': 'Translation:',
+                'style': 'Style:',
+                'font': 'Font:',
+                'copied': '✓ Copied to clipboard (Esc to hide)',
+                'translating': 'Translating:',
+                'call_api': '⏳ Translating for you, please wait...',
+                'trans_done': 'Done:',
+                'trans_fail': '❌ Translation Failed',
+                'err_net': 'Check network or config',
+                're_trans': '🔄 Retranslating...'
+            }
+        }
+        self.t = self.i18n[self.ui_lang]
         
         try:
             self.client = genai.Client(vertexai=True, project=os.getenv('GOOGLE_CLOUD_PROJECT'), location=os.getenv('GOOGLE_CLOUD_LOCATION'))
@@ -106,7 +159,7 @@ class TranslatorUI:
         self.widget_lbl = tk.Label(self.widget_frame, text="🌍", font=("Arial", 24), bg=self.colors['button_bg'], fg='white', cursor="hand2")
         self.widget_lbl.pack(pady=(5, 0))
         
-        self.widget_hint = tk.Label(self.widget_frame, text="ctrl+鼠标", font=("Arial", 9), bg=self.colors['button_bg'], fg='white', cursor="hand2")
+        self.widget_hint = tk.Label(self.widget_frame, text=self.t['ctrl_click'], font=("Arial", 9), bg=self.colors['button_bg'], fg='white', cursor="hand2")
         self.widget_hint.pack(pady=(0, 2))
         
         # Dragging logic variables
@@ -117,41 +170,30 @@ class TranslatorUI:
         self._is_dragging = False
 
         def on_drag_start(event):
-            # Record the absolute screen coordinates of the mouse click
             self._drag_start_x = event.x_root
             self._drag_start_y = event.y_root
-            # Record the initial window position
             self._win_start_x = self.widget.winfo_x()
             self._win_start_y = self.widget.winfo_y()
             self._is_dragging = False
 
         def on_drag_motion(event):
-            # Calculate delta based on absolute screen coordinates
             dx = event.x_root - self._drag_start_x
             dy = event.y_root - self._drag_start_y
-            
-            # Require at least 3 pixels of movement to be considered a drag
-            # to prevent accidental drags on sloppy clicks
             if not self._is_dragging and (abs(dx) > 3 or abs(dy) > 3):
                 self._is_dragging = True
-                
             if self._is_dragging:
-                # Apply delta to the original window position
                 new_x = self._win_start_x + dx
                 new_y = self._win_start_y + dy
                 self.widget.geometry(f"+{new_x}+{new_y}")
 
         def on_drag_release(event):
             if not self._is_dragging:
-                # It was just a click, so expand
                 self.expand_to_main()
             else:
-                # It was a drag, save new position
                 self.config['widget_x'] = self.widget.winfo_x()
                 self.config['widget_y'] = self.widget.winfo_y()
                 save_config(self.config)
 
-        # Bind events to all parts of the widget so dragging/clicking works everywhere
         for ui_element in (self.widget_lbl, self.widget_hint, self.widget_frame):
             ui_element.bind("<ButtonPress-1>", on_drag_start)
             ui_element.bind("<B1-Motion>", on_drag_motion)
@@ -159,16 +201,18 @@ class TranslatorUI:
 
         # Context Menu for the widget
         self.context_menu = tk.Menu(self.widget, tearoff=0)
-        self.context_menu.add_command(label="自动检测 → 中文", command=lambda: self.send_command_to_main('auto_zh'))
+        self.context_menu.add_command(label=self.t['auto_zh'], command=lambda: self.send_command_to_main('auto_zh'))
         self.context_menu.add_separator()
-        self.context_menu.add_command(label="中文 → 德文", command=lambda: self.send_command_to_main('zh_de'))
-        self.context_menu.add_command(label="德文 → 中文", command=lambda: self.send_command_to_main('de_zh'))
-        self.context_menu.add_command(label="中文 → 英文", command=lambda: self.send_command_to_main('zh_en'))
-        self.context_menu.add_command(label="英文 → 中文", command=lambda: self.send_command_to_main('en_zh'))
+        self.context_menu.add_command(label=self.t['zh_de'], command=lambda: self.send_command_to_main('zh_de'))
+        self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
+        self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
+        self.context_menu.add_command(label=self.t['en_zh'], command=lambda: self.send_command_to_main('en_zh'))
         self.context_menu.add_separator()
-        self.context_menu.add_command(label="Auth 刷新授权", command=lambda: self.send_command_to_main('auth'))
+        self.context_menu.add_command(label=self.t['auth'], command=lambda: self.send_command_to_main('auth'))
+        self.context_menu.add_command(label=self.t['ui_zh'], command=lambda: self.send_command_to_main('ui_zh'))
+        self.context_menu.add_command(label=self.t['ui_en'], command=lambda: self.send_command_to_main('ui_en'))
         self.context_menu.add_separator()
-        self.context_menu.add_command(label="退出", command=lambda: self.send_command_to_main('quit'))
+        self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
         def show_context_menu(event):
             try:
@@ -176,7 +220,6 @@ class TranslatorUI:
             finally:
                 self.context_menu.grab_release()
 
-        # Bind right-click for macOS
         for ui_element in (self.widget_lbl, self.widget_hint, self.widget_frame):
             ui_element.bind("<Button-2>", show_context_menu)
             ui_element.bind("<Button-3>", show_context_menu)
@@ -202,6 +245,11 @@ class TranslatorUI:
         
         # Force strict topmost using PyObjC after windows are mapped
         self.root.after(100, self._force_strict_topmost)
+
+    def _format_lang(self, lang_str):
+        if self.ui_lang == 'en':
+            return lang_str.replace("自动检测", "Auto").replace("中文", "ZH").replace("英文", "EN").replace("德文", "DE")
+        return lang_str
 
     def send_command_to_main(self, cmd):
         """Send a menu command to the main.py tray application"""
@@ -248,14 +296,14 @@ class TranslatorUI:
         title_frame = tk.Frame(main_frame, bg=self.colors['bg'])
         title_frame.pack(fill=tk.X, pady=(0, 10))
 
-        self.title_label = tk.Label(title_frame, text="等待翻译...", font=("Arial", 14, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        self.title_label = tk.Label(title_frame, text=self.t['wait'], font=("Arial", 14, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'])
         self.title_label.pack(side=tk.LEFT)
 
         # Style selector variables
-        self.style_var = tk.StringVar(value="默认")
-        self.style_options = ["默认"] # Will be updated dynamically
+        self.style_var = tk.StringVar(value="默认" if self.ui_lang == 'zh' else "Default")
+        self.style_options = ["默认" if self.ui_lang == 'zh' else "Default"]
         
-        style_label = tk.Label(title_frame, text="风格:", font=("Arial", 11), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        style_label = tk.Label(title_frame, text=self.t['style'], font=("Arial", 11), bg=self.colors['bg'], fg=self.colors['label_fg'])
         style_label.pack(side=tk.LEFT, padx=(20, 5))
 
         self.style_button = tk.Label(title_frame, textvariable=self.style_var, font=("Arial", 10), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
@@ -268,7 +316,7 @@ class TranslatorUI:
         font_sizes = [10, 12, 14, 16, 18, 20, 24]
         self.font_size_var = tk.IntVar(value=self.config['font_size'])
 
-        font_size_label = tk.Label(title_frame, text="字体:", font=("Arial", 11), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        font_size_label = tk.Label(title_frame, text=self.t['font'], font=("Arial", 11), bg=self.colors['bg'], fg=self.colors['label_fg'])
         font_size_label.pack(side=tk.LEFT, padx=(20, 5))
 
         self.font_size_button = tk.Label(title_frame, text=str(self.font_size_var.get()), font=("Arial", 10), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
@@ -306,20 +354,20 @@ class TranslatorUI:
         for size in font_sizes:
             self.font_size_menu.add_command(label=str(size), command=lambda s=size: self.select_font_size(s))
 
-        orig_label = tk.Label(main_frame, text="原文:", font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
+        orig_label = tk.Label(main_frame, text=self.t['orig'], font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
         orig_label.pack(fill=tk.X, pady=(0, 5))
 
         initial_spacing = round(self.config['font_size'] * 0.309)
         self.orig_text = scrolledtext.ScrolledText(main_frame, wrap=tk.WORD, font=("Arial", self.config['font_size']), height=5, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], spacing1=initial_spacing, spacing3=initial_spacing)
         self.orig_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
 
-        trans_label = tk.Label(main_frame, text="译文:", font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
+        trans_label = tk.Label(main_frame, text=self.t['trans'], font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
         trans_label.pack(fill=tk.X, pady=(0, 5))
 
         self.trans_text = scrolledtext.ScrolledText(main_frame, wrap=tk.WORD, font=("Arial", self.config['font_size']), height=5, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], spacing1=initial_spacing, spacing3=initial_spacing)
         self.trans_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
 
-        self.status_label = tk.Label(main_frame, text="✓ 译文已复制 (按 Esc 收起)", font=("Arial", 10), fg=self.colors['status_fg'], bg=self.colors['bg'])
+        self.status_label = tk.Label(main_frame, text=self.t['copied'], font=("Arial", 10), fg=self.colors['status_fg'], bg=self.colors['bg'])
         self.status_label.pack(pady=(5, 0))
 
     def select_font_size(self, size):
@@ -345,10 +393,10 @@ class TranslatorUI:
 
     def on_style_change(self):
         selected_style = self.style_var.get()
-        if "默认" in selected_style:
+        if "默认" in selected_style or "Default" in selected_style:
             return
 
-        self.progress_label.config(text="🔄 正在重新翻译...")
+        self.progress_label.config(text=self.t['re_trans'])
         self.style_button.config(cursor='watch')
         self.main_win.update()
 
@@ -370,20 +418,20 @@ class TranslatorUI:
                     self.trans_text.config(state=tk.DISABLED)
                     pyperclip.copy(new_translation)
                     self.progress_label.config(text="")
-                    self.status_label.config(text="✓ 译文已更新并复制到剪贴板 (按 Esc 收起)")
+                    self.status_label.config(text=self.t['copied'])
                     self.style_button.config(cursor='hand2')
 
                 self.main_win.after(0, update_ui)
             except Exception as e:
                 def show_error():
-                    self.progress_label.config(text="❌ 翻译失败")
+                    self.progress_label.config(text=self.t['trans_fail'])
                     self.style_button.config(cursor='hand2')
                 self.main_win.after(0, show_error)
 
         if self.client:
             threading.Thread(target=translate_with_style, daemon=True).start()
         else:
-            self.progress_label.config(text="❌ VertexAI 未初始化")
+            self.progress_label.config(text="❌ VertexAI Error")
             self.style_button.config(cursor='hand2')
 
     def collapse_to_widget(self):
@@ -420,7 +468,6 @@ class TranslatorUI:
         self.main_win.focus_force()
         self.root.after(50, self._force_strict_topmost)
         
-        # Simple macOS focus push without aggressive loops
         try:
             import subprocess
             subprocess.run(['osascript', '-e', 'tell application "System Events" to set frontmost of the first process whose unix id is ' + str(os.getpid()) + ' to true'], capture_output=True)
@@ -436,7 +483,8 @@ class TranslatorUI:
             self.current_source_lang = payload.get('source_lang', '')
             self.current_target_lang = payload.get('target_lang', '')
 
-            self.title_label.config(text=f"正在翻译: {self.current_source_lang} → {self.current_target_lang}...")
+            title = f"{self.t['translating']} {self._format_lang(self.current_source_lang)} → {self._format_lang(self.current_target_lang)}..."
+            self.title_label.config(text=title)
             self.update_style_menu()
             
             self.orig_text.config(state=tk.NORMAL)
@@ -446,26 +494,25 @@ class TranslatorUI:
 
             self.trans_text.config(state=tk.NORMAL)
             self.trans_text.delete(1.0, tk.END)
-            self.trans_text.insert(tk.END, "⏳ 正在呼叫 VertexAI 进行翻译，请稍候...")
+            self.trans_text.insert(tk.END, self.t['call_api'])
             self.trans_text.config(state=tk.DISABLED)
             
             self.progress_label.config(text="")
-            self.status_label.config(text="翻译中...", fg=self.colors['label_fg'])
+            self.status_label.config(text=self.t['wait'], fg=self.colors['label_fg'])
             
             self.expand_to_main()
             
         elif status == 'complete':
-            # We might receive a complete payload from the legacy format or direct complete
             translation = payload.get('translation', '')
             
-            # Update languages if provided (might just be a style update)
             if 'source_lang' in payload:
                 self.current_source_lang = payload.get('source_lang', '')
                 self.current_target_lang = payload.get('target_lang', '')
                 self.current_original = payload.get('original', '')
                 self.update_style_menu()
 
-            self.title_label.config(text=f"翻译完成: {self.current_source_lang} → {self.current_target_lang}")
+            title = f"{self.t['trans_done']} {self._format_lang(self.current_source_lang)} → {self._format_lang(self.current_target_lang)}"
+            self.title_label.config(text=title)
             
             self.orig_text.config(state=tk.NORMAL)
             self.orig_text.delete(1.0, tk.END)
@@ -477,20 +524,19 @@ class TranslatorUI:
             self.trans_text.insert(tk.END, translation)
             self.trans_text.config(state=tk.DISABLED)
 
-            self.status_label.config(text="✓ 译文已复制 (按 Esc 收起)", fg=self.colors['status_fg'])
+            self.status_label.config(text=self.t['copied'], fg=self.colors['status_fg'])
             
-            # If the window is somehow hidden, expand it
             if not self.main_win.winfo_viewable():
                 self.expand_to_main()
                 
         elif status == 'error':
             error_msg = payload.get('error_msg', 'Unknown error')
-            self.title_label.config(text="❌ 翻译失败")
+            self.title_label.config(text=self.t['trans_fail'])
             self.trans_text.config(state=tk.NORMAL)
             self.trans_text.delete(1.0, tk.END)
-            self.trans_text.insert(tk.END, f"翻译过程中发生错误：\n{error_msg}")
+            self.trans_text.insert(tk.END, f"{self.t['trans_fail']}:\n{error_msg}")
             self.trans_text.config(state=tk.DISABLED)
-            self.status_label.config(text="请检查网络或配置", fg='red')
+            self.status_label.config(text=self.t['err_net'], fg='red')
             
             if not self.main_win.winfo_viewable():
                 self.expand_to_main()

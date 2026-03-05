@@ -18,6 +18,24 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def load_config():
+    config_path = os.path.expanduser('~/.vibe_translator_config.json')
+    try:
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                return json.load(f)
+    except:
+        pass
+    return {}
+
+def save_config(config):
+    config_path = os.path.expanduser('~/.vibe_translator_config.json')
+    try:
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=2)
+    except:
+        pass
+
 class TranslatorApp(rumps.App):
     """macOS Menu Bar Translation Application"""
 
@@ -26,6 +44,35 @@ class TranslatorApp(rumps.App):
             "🌍",  # Menu bar icon
             quit_button=None
         )
+        
+        self.config = load_config()
+        self.ui_lang = self.config.get('ui_lang', 'zh')
+        
+        self.i18n = {
+            'zh': {
+                'auto_zh': '自动检测 → 中文',
+                'zh_de': '中文 → 德文',
+                'de_zh': '德文 → 中文',
+                'zh_en': '中文 → 英文',
+                'en_zh': '英文 → 中文',
+                'auth': 'Auth 刷新授权',
+                'ui_zh': '界面中文',
+                'ui_en': '界面英文',
+                'quit': '退出'
+            },
+            'en': {
+                'auto_zh': 'Auto → ZH',
+                'zh_de': 'ZH → DE',
+                'de_zh': 'DE → ZH',
+                'zh_en': 'ZH → EN',
+                'en_zh': 'EN → ZH',
+                'auth': 'Auth Refresh',
+                'ui_zh': 'UI: Chinese',
+                'ui_en': 'UI: English',
+                'quit': 'Quit'
+            }
+        }
+        t = self.i18n[self.ui_lang]
 
         # Initialize VertexAI client
         self.init_vertexai()
@@ -35,17 +82,44 @@ class TranslatorApp(rumps.App):
 
         # Translation options in menu
         self.menu = [
-            rumps.MenuItem("自动检测 → 中文", callback=self.translate_auto_to_zh),
+            rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             None,  # Separator
-            rumps.MenuItem("中文 → 德文", callback=self.translate_zh_to_de),
-            rumps.MenuItem("德文 → 中文", callback=self.translate_de_to_zh),
-            rumps.MenuItem("中文 → 英文", callback=self.translate_zh_to_en),
-            rumps.MenuItem("英文 → 中文", callback=self.translate_en_to_zh),
+            rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
+            rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
+            rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
+            rumps.MenuItem(t['en_zh'], callback=self.translate_en_to_zh),
             None,  # Separator
-            rumps.MenuItem("Auth 刷新授权", callback=self.refresh_auth),
+            rumps.MenuItem(t['auth'], callback=self.refresh_auth),
+            rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
+            rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
-            rumps.MenuItem("退出", callback=self.quit_app)
+            rumps.MenuItem(t['quit'], callback=self.quit_app)
         ]
+
+    def change_lang(self, lang):
+        if self.ui_lang == lang: return
+        self.config['ui_lang'] = lang
+        save_config(self.config)
+        print(f">>> Changing UI language to {lang}, restarting...")
+        
+        # Kill daemon gracefully
+        import socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1.0)
+            s.connect(('127.0.0.1', 50051))
+            s.sendall(json.dumps({'action': 'quit'}).encode('utf-8'))
+            s.close()
+        except: pass
+        
+        import sys, subprocess
+        subprocess.Popen(
+            [sys.executable, sys.argv[0]],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        rumps.quit_application()
 
     def start_command_listener(self):
         """Listen for commands triggered from the floating widget"""
@@ -69,6 +143,8 @@ class TranslatorApp(rumps.App):
                         elif cmd == 'zh_en': self.translate_zh_to_en(None)
                         elif cmd == 'en_zh': self.translate_en_to_zh(None)
                         elif cmd == 'auth': self.refresh_auth(None)
+                        elif cmd == 'ui_zh': self.change_lang('zh')
+                        elif cmd == 'ui_en': self.change_lang('en')
                         elif cmd == 'quit': self.quit_app(None)
                     conn.close()
             except Exception as e:

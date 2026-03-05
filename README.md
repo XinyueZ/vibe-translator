@@ -13,7 +13,8 @@ A macOS menu bar translation application powered by Google VertexAI.
 - 🌍 **Menu Bar Integration** - Lives in your macOS menu bar
 - 🎈 **Floating Widget** - Persistent, draggable desktop widget that expands to show translations instantly without spawning new windows
 - 🖱️ **Widget Context Menu** - Right-click (or Ctrl+Click) the floating widget to access all translation options directly without reaching for the menu bar
-- ⏳ **Real-time Progress** - UI instantly expands to show the original text and a loading state while waiting for AI translation
+- 🌐 **Bilingual UI** - Easily toggle the entire application interface between English and Chinese
+- ⏳ **Real-time Progress** - UI instantly expands to show the original text and a friendly loading state while waiting for AI translation
 - 👻 **Omnipresent** - Strictly stays above all other apps and follows you across all macOS Spaces/Desktops automatically
 - 🔄 **Multi-Language Support** - Auto-detect to Chinese, plus translation between Chinese, English, and German
 - 🎨 **Style Options** - Choose translation tones (informal/formal German, regional Chinese dialects, etc.)
@@ -88,6 +89,9 @@ Keep the Terminal window open (you can minimize it).
 6. Once translated, the result appears and is copied to your clipboard
 7. Press `Esc` or `Cmd+W` to close the dialog and collapse it back to a floating widget
 
+**Change UI Language:**
+Right-click the floating widget or click the menu bar icon, and select **"UI: English"** or **"界面中文"** to instantly switch the app's interface language.
+
 ### Translation Styles
 
 - **German**: Choose between duzen (informal "you", default) or formal Sie
@@ -124,7 +128,8 @@ MIT
 - 🌍 **菜单栏集成** - 常驻在 macOS 菜单栏
 - 🎈 **悬浮组件** - 常驻桌面、可随意拖拽的悬浮球，瞬间展开显示翻译结果，告别反复弹窗
 - 🖱️ **悬浮球右键菜单** - 直接右键（或 Ctrl+点击）悬浮球即可呼出所有翻译选项，无需再将鼠标移至屏幕顶部
-- ⏳ **实时进度** - 翻译时瞬间展开窗口，显示原文并提示正在呼叫 AI，告别盲目等待
+- 🌐 **双语界面** - 一键切换应用程序的所有界面为全中文或全英文
+- ⏳ **实时进度** - 翻译时瞬间展开窗口，显示原文并提示正在为您翻译，告别盲目等待
 - 👻 **无处不在** - 拥有最高系统层级置顶，且会像“幽灵”一样跨越所有 macOS 桌面空间 (Spaces) 跟随你
 - 🔄 **多语言支持** - 自动检测语言并翻译为中文，以及中文、英文、德文互译
 - 🎨 **风格选项** - 选择翻译风格（德语 duzen/Sie、中文地域口音等）
@@ -198,6 +203,9 @@ python main.py
 5. 悬浮球会瞬间展开，显示你选中的原文和加载动画
 6. 翻译完成后，结果会自动显示并复制到剪贴板
 7. 按 `Esc` 或 `Cmd+W` 关闭结果窗口，它会自动缩回变成悬浮球
+
+**切换界面语言：**
+右键点击悬浮球或点击顶部菜单栏，选择 **"界面英文"** 或 **"UI: Chinese"** 即可瞬间切换界面的语言。
 
 ### 翻译风格
 
