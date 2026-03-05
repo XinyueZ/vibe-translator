@@ -252,10 +252,6 @@ class TranslatorUI:
         self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
         self.context_menu.add_command(label=self.t['en_zh'], command=lambda: self.send_command_to_main('en_zh'))
         self.context_menu.add_separator()
-        self.context_menu.add_command(label=self.t['auth'], command=lambda: self.send_command_to_main('auth'))
-        self.context_menu.add_command(label=self.t['ui_zh'], command=lambda: self.send_command_to_main('ui_zh'))
-        self.context_menu.add_command(label=self.t['ui_en'], command=lambda: self.send_command_to_main('ui_en'))
-        self.context_menu.add_separator()
         
         self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', True))
         def on_widget_toggle_mouse_follow():
@@ -263,8 +259,13 @@ class TranslatorUI:
             self.send_command_to_main('toggle_mouse_follow')
         
         self.context_menu.add_checkbutton(label=self.t['mouse_follow'], variable=self.mouse_follow_var, command=on_widget_toggle_mouse_follow)
-        
         self.context_menu.add_command(label=self.t['how_to_use'], command=self.show_toast)
+        
+        self.context_menu.add_command(label=self.t['ui_zh'], command=lambda: self.send_command_to_main('ui_zh'))
+        self.context_menu.add_command(label=self.t['ui_en'], command=lambda: self.send_command_to_main('ui_en'))
+        self.context_menu.add_separator()
+        
+        self.context_menu.add_command(label=self.t['auth'], command=lambda: self.send_command_to_main('auth'))
         self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
         def show_context_menu(event):

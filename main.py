@@ -97,12 +97,12 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
             rumps.MenuItem(t['en_zh'], callback=self.translate_en_to_zh),
             None,  # Separator
-            rumps.MenuItem(t['auth'], callback=self.refresh_auth),
+            self.mouse_follow_item,
+            rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
             rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
-            self.mouse_follow_item,
-            rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
+            rumps.MenuItem(t['auth'], callback=self.refresh_auth),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
         ]
 
