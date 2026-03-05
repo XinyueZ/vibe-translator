@@ -141,7 +141,7 @@ class TranslatorUI:
                 
                 # Auto-override location for preview models
                 if "-preview" in model_name.lower():
-                    location = "global"
+                    location = "europe-west3"
                     
                 if not project_id or not location:
                     raise ValueError("Missing GOOGLE_CLOUD_PROJECT or GOOGLE_CLOUD_LOCATION")

@@ -165,8 +165,8 @@ class TranslatorApp(rumps.App):
                 
                 # Auto-override location for preview models
                 if "-preview" in model_name.lower():
-                    print(f">>> Preview model detected ({model_name}), forcing location to 'us-central1' (global for SDK fallback)")
-                    location = "global" # Forced to global as per requirement
+                    print(f">>> Preview model detected ({model_name}), forcing location to 'europe-west3'")
+                    location = "europe-west3" # Forced to europe-west3 as per requirement
                     
                 if not project_id or not location:
                     raise ValueError("Missing GOOGLE_CLOUD_PROJECT or GOOGLE_CLOUD_LOCATION for VertexAI.")
