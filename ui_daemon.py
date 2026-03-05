@@ -263,6 +263,26 @@ class TranslatorUI:
         
         # Force strict topmost using PyObjC after windows are mapped
         self.root.after(100, self._force_strict_topmost)
+        
+        # Start watchdog to prevent macOS from mysteriously hiding the widget
+        self._start_visibility_watchdog()
+
+    def _start_visibility_watchdog(self):
+        """Periodically ensure the widget remains visible and on top"""
+        # If the main window is NOT visible, the widget SHOULD be visible
+        if not self.main_win.winfo_viewable():
+            try:
+                if self.widget.state() != 'normal':
+                    self.widget.deiconify()
+                self.widget.lift()
+                self.widget.attributes('-topmost', True)
+                # Re-assert native macOS topmost level gently
+                self._force_strict_topmost()
+            except Exception:
+                pass
+        
+        # Run this check every 2000ms (2 seconds)
+        self.root.after(2000, self._start_visibility_watchdog)
 
     def _format_lang(self, lang_str):
         if self.ui_lang == 'en':
@@ -467,6 +487,7 @@ class TranslatorUI:
         self.main_win.withdraw()
         self.widget.deiconify()
         self.widget.lift()
+        self.root.update_idletasks()
         self.root.after(50, self._force_strict_topmost)
 
     def expand_to_main(self):
@@ -484,6 +505,7 @@ class TranslatorUI:
         self.main_win.deiconify()
         self.main_win.lift()
         self.main_win.focus_force()
+        self.root.update_idletasks()
         self.root.after(50, self._force_strict_topmost)
         
         try:
