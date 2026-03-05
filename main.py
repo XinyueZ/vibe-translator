@@ -119,6 +119,8 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['auth'], callback=self.refresh_auth),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
         ])
+        
+        self.menu = menu_items
 
 
     def show_how_to_use(self, _):
