@@ -1228,7 +1228,10 @@ class TranslatorUI:
             lbl.bind("<B1-Motion>", self._drag_sash_handle)
         
         # Initial placement
-        self.root.after(200, self._update_sash_handle)
+        # Use multiple delayed updates to ensure layout is complete before positioning dots
+        self.root.after(100, self._update_sash_handle)
+        self.root.after(300, self._update_sash_handle)
+        self.root.after(500, self._update_sash_handle)
 
         self.status_label = tk.Label(main_frame, text=self.t['copied'], font=("Arial", 10), fg=self.colors['status_fg'], bg=self.colors['bg'])
         self.status_label.pack(pady=(5, 0))
@@ -1449,6 +1452,9 @@ class TranslatorUI:
     def expand_to_main(self):
         """Hide widget, show main window"""
         self.widget.withdraw()
+        # Ensure the sash handle renders correctly after layout calculation
+        self.root.after(100, self._update_sash_handle)
+        self.root.after(300, self._update_sash_handle)
         
         w = self.config['window_width']
         h = self.config['window_height']
