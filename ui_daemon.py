@@ -91,6 +91,7 @@ class TranslatorUI:
         self.i18n = {
             'zh': {
                 'rescue_widget': '找回悬浮',
+                'ocr_translate': '📸 截图翻译',
                 'auto_zh': '自动检测 → 中文',
                 'auto_de': '自动检测 → 德文',
                 'auto_en': '自动检测 → 英文',
@@ -124,6 +125,7 @@ class TranslatorUI:
             },
             'en': {
                 'rescue_widget': 'Show Widget',
+                'ocr_translate': '📸 OCR Translate',
                 'auto_zh': 'Auto → ZH',
                 'auto_de': 'Auto → DE',
                 'auto_en': 'Auto → EN',
@@ -147,7 +149,7 @@ class TranslatorUI:
                 'trans': 'Translation:',
                 'style': 'Style:',
                 'font': 'Font:',
-                'copied': '✓ Copied to clipboard (Esc to hide)',
+                'copied': '✓ Copied to clipboard (Press Esc to close)',
                 'translating': 'Translating:',
                 'call_api': '⏳ Translating for you, please wait...',
                 'trans_done': 'Done:',
@@ -813,6 +815,7 @@ class TranslatorUI:
             self.context_menu.destroy()
             
         self.context_menu = tk.Menu(self.widget, tearoff=0)
+        self.context_menu.add_command(label=self.t['ocr_translate'], command=lambda: self.send_command_to_main('ocr_translate'))
         self.context_menu.add_command(label=self.t['auto_zh'], command=lambda: self.send_command_to_main('auto_zh'))
         self.context_menu.add_command(label=self.t['auto_de'], command=lambda: self.send_command_to_main('auto_de'))
         self.context_menu.add_command(label=self.t['auto_en'], command=lambda: self.send_command_to_main('auto_en'))

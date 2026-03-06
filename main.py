@@ -55,6 +55,7 @@ class TranslatorApp(rumps.App):
                 'hover_br': '右下悬停',
                 'hover_tl': '左上悬停',
                 'hover_bl': '左下悬停',
+                'ocr_translate': '📸 截图翻译',
                 'auto_zh': '自动检测 → 中文',
                 'auto_de': '自动检测 → 德文',
                 'auto_en': '自动检测 → 英文',
@@ -79,6 +80,7 @@ class TranslatorApp(rumps.App):
                 'hover_br': 'Hover Bottom Right',
                 'hover_tl': 'Hover Top Left',
                 'hover_bl': 'Hover Bottom Left',
+                'ocr_translate': '📸 OCR Translate',
                 'auto_zh': 'Auto → ZH',
                 'auto_de': 'Auto → DE',
                 'auto_en': 'Auto → EN',
@@ -129,6 +131,7 @@ class TranslatorApp(rumps.App):
             self.hover_tl_item,
             self.hover_bl_item,
             None,
+            rumps.MenuItem(t['ocr_translate'], callback=self.ocr_translate),
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             rumps.MenuItem(t['auto_de'], callback=self.translate_auto_to_de),
             rumps.MenuItem(t['auto_en'], callback=self.translate_auto_to_en),
@@ -248,6 +251,7 @@ class TranslatorApp(rumps.App):
                             self.config = load_config()
                             self._rebuild_main_menu()
                             self._send_to_daemon({'action': 'reload_ui_config'})
+                        elif cmd == 'ocr_translate': self.ocr_translate(None)
                         elif cmd == 'auto_zh': self.translate_auto_to_zh(None)
                         elif cmd == 'auto_de': self.translate_auto_to_de(None)
                         elif cmd == 'auto_en': self.translate_auto_to_en(None)
@@ -284,6 +288,7 @@ class TranslatorApp(rumps.App):
             self.hover_tl_item,
             self.hover_bl_item,
             None,
+            rumps.MenuItem(t['ocr_translate'], callback=self.ocr_translate),
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             rumps.MenuItem(t['auto_de'], callback=self.translate_auto_to_de),
             rumps.MenuItem(t['auto_en'], callback=self.translate_auto_to_en),
@@ -431,6 +436,11 @@ class TranslatorApp(rumps.App):
             print(f">>> Got text, starting translation: {text[:50]}...")
             sys.stdout.flush()
             self.translate_text(text, custom_lang['source'], custom_lang['target'], custom_lang['target'], custom_lang_id=cid)
+
+    def ocr_translate(self, _):
+        """截图翻译"""
+        print(">>> Menu clicked: 截图翻译")
+        pass
 
     def translate_auto_to_zh(self, _):
         """自动检测 → 中文"""
