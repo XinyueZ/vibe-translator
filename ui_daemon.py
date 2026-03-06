@@ -442,6 +442,14 @@ class TranslatorUI:
 
     def show_toast(self):
         """Show a temporary toast notification"""
+        if self.ui_lang == 'zh':
+            msg = "💡 使用方法:\n\n1. 在任何地方选中文本\n2. 按 Cmd+C 复制\n3. 选中文本后，按住 Ctrl 键将鼠标移至圆上，并保持 Ctrl+鼠标左键点击以打开翻译选项\n\n(开启「鼠标跟随」后圆会自动靠近鼠标)"
+        else:
+            msg = "💡 How to Use:\n\n1. Select text anywhere\n2. Press Cmd+C to copy\n3. Hold Ctrl, move mouse to the widget, then Ctrl+Click to select translation options\n\n(Enable 'Mouse Follow' for easier access)"
+        self.show_custom_toast(msg)
+
+    def show_custom_toast(self, msg):
+        """Show a custom temporary toast notification"""
         if hasattr(self, 'toast_win') and self.toast_win and self.toast_win.winfo_exists():
             self.toast_win.destroy()
             
@@ -449,11 +457,6 @@ class TranslatorUI:
         self.toast_win.overrideredirect(True)
         self.toast_win.attributes('-topmost', True)
         self.toast_win.configure(bg=self.colors['bg'], highlightthickness=1, highlightbackground=self.colors['fg'])
-        
-        if self.ui_lang == 'zh':
-            msg = "💡 使用方法:\n\n1. 在任何地方选中文本\n2. 按 Cmd+C 复制\n3. 选中文本后，按住 Ctrl 键将鼠标移至圆上，并保持 Ctrl+鼠标左键点击以打开翻译选项\n\n(开启「鼠标跟随」后圆会自动靠近鼠标)"
-        else:
-            msg = "💡 How to Use:\n\n1. Select text anywhere\n2. Press Cmd+C to copy\n3. Hold Ctrl, move mouse to the widget, then Ctrl+Click to select translation options\n\n(Enable 'Mouse Follow' for easier access)"
             
         lbl = tk.Label(
             self.toast_win, 
@@ -473,37 +476,31 @@ class TranslatorUI:
         
         sw = self.toast_win.winfo_screenwidth()
         sh = self.toast_win.winfo_screenheight()
+        
         x = (sw - w) // 2
-        y = (sh - h) // 2
+        y = (sh - h) // 2 - 100
         
-        self.toast_win.geometry(f"{w}x{h}+{x}+{y}")
-        
-        alpha = 0.0
-        self.toast_win.attributes('-alpha', alpha)
+        self.toast_win.geometry(f" +{x}+{y}")
+        self.toast_win.attributes('-alpha', 0.0)
         
         def fade_in():
-            nonlocal alpha
-            if not self.toast_win.winfo_exists(): return
-            if alpha < 0.95:
-                alpha += 0.05
-                self.toast_win.attributes('-alpha', alpha)
+            if not hasattr(self, 'toast_win') or not self.toast_win.winfo_exists(): return
+            alpha = self.toast_win.attributes('-alpha')
+            if alpha < 0.9:
+                self.toast_win.attributes('-alpha', alpha + 0.1)
                 self.root.after(20, fade_in)
             else:
-                self.root.after(8000, fade_out)
+                self.root.after(3000, fade_out)
                 
         def fade_out():
-            nonlocal alpha
-            if not self.toast_win.winfo_exists(): return
-            if alpha > 0.0:
-                alpha -= 0.05
-                self.toast_win.attributes('-alpha', alpha)
+            if not hasattr(self, 'toast_win') or not self.toast_win.winfo_exists(): return
+            alpha = self.toast_win.attributes('-alpha')
+            if alpha > 0:
+                self.toast_win.attributes('-alpha', alpha - 0.1)
                 self.root.after(20, fade_out)
             else:
                 self.toast_win.destroy()
                 
-        self.toast_win.bind("<Button-1>", lambda e: fade_out())
-        lbl.bind("<Button-1>", lambda e: fade_out())
-        
         fade_in()
 
 
@@ -935,11 +932,22 @@ class TranslatorUI:
                     self.root.after(800, cleanup_and_show_menu)
                 else:
                     self.update_scan_btn_text(" 未找到文字 ")
+                    # If file doesn't exist or is empty, might be a permission issue
+                    if not os.path.exists(tmp_img) or os.path.getsize(tmp_img) == 0:
+                        raise PermissionError("Screen Recording permission might be missing.")
                 
             except Exception as ex:
                 print(f"OCR Error: {ex}")
                 if self.ocr_win.winfo_exists():
                     self.update_scan_btn_text(" 错误 ")
+                
+                # Show permission toast
+                if self.ui_lang == 'zh':
+                    perm_msg = "⚠️ 截图失败或未找到文字\n\n请检查是否已在「系统设置 -> 隐私与安全性 -> 屏幕录制」中为 Terminal 或您的 Python 应用开启了权限。"
+                else:
+                    perm_msg = "⚠️ OCR Capture Failed\n\nEnsure 'Screen Recording' permission is enabled for Terminal/Python in System Settings -> Privacy & Security."
+                self.show_custom_toast(perm_msg)
+
             finally:
                 if self.ocr_win.winfo_exists() and not extracted_text:
                     self.ocr_win.deiconify()
