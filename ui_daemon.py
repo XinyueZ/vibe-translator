@@ -284,8 +284,13 @@ class TranslatorUI:
                 self.context_menu.post(px, py)
             finally:
                 self.context_menu.grab_release()
+                
+                def unstick_states():
+                    self._context_menu_open = False
+                    self.ctrl_pressed = False # Prevent ctrl getting stuck if user opened menu with ctrl+click
+                    
                 # Use a slight delay to allow menu clicks to process before unsetting the flag
-                self.root.after(200, lambda: setattr(self, '_context_menu_open', False))
+                self.root.after(200, unstick_states)
                 
         self.show_context_menu_programmatic = show_context_menu
 
@@ -363,7 +368,8 @@ class TranslatorUI:
         self.root.after(20, self._mouse_follow_loop)
 
     def _mouse_follow_loop(self):
-        if self.mouse_follow and not self.ctrl_pressed and not self.main_win.winfo_viewable() and not getattr(self, '_is_dragging', False):
+        if (self.mouse_follow and not self.ctrl_pressed and not self.main_win.winfo_viewable() 
+            and not getattr(self, '_is_dragging', False) and not getattr(self, '_context_menu_open', False)):
             x = self.root.winfo_pointerx()
             y = self.root.winfo_pointery()
             
@@ -1357,6 +1363,10 @@ class TranslatorUI:
 
     def collapse_to_widget(self):
         """Hide main window, show widget"""
+        # Force reset internal interaction states to un-stuck 'ctrl+mouse' follow issues
+        self.ctrl_pressed = False
+        self._is_dragging = False
+        
         if self.main_win.winfo_viewable():
             geom = self.main_win.geometry()
             try:
