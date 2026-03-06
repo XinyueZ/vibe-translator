@@ -440,7 +440,7 @@ class TranslatorApp(rumps.App):
     def ocr_translate(self, _):
         """截图翻译"""
         print(">>> Menu clicked: 截图翻译")
-        pass
+        self._send_to_daemon({'action': 'show_ocr_overlay'})
 
     def translate_auto_to_zh(self, _):
         """自动检测 → 中文"""

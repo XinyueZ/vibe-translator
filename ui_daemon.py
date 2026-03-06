@@ -734,6 +734,129 @@ class TranslatorUI:
         btn.pack()
         btn.bind("<Button-1>", lambda e: do_remove())
 
+    def show_ocr_overlay(self):
+        if hasattr(self, 'ocr_win') and self.ocr_win.winfo_exists():
+            self.ocr_win.deiconify()
+            self.ocr_win.lift()
+            self._force_strict_topmost()
+            return
+
+        self.ocr_win = tk.Toplevel(self.root)
+        self.ocr_win.attributes('-topmost', True)
+        self.ocr_win.overrideredirect(True)
+        self.ocr_win.configure(bg='systemTransparent')
+        self.ocr_win.attributes('-transparent', True)
+
+        init_w, init_h = 500, 300
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        x = (sw - init_w) // 2
+        y = (sh - init_h) // 2
+        self.ocr_win.geometry(f"{init_w}x{init_h}+{x}+{y}")
+
+        self.ocr_canvas = tk.Canvas(self.ocr_win, bg='systemTransparent', highlightthickness=0)
+        self.ocr_canvas.pack(fill=tk.BOTH, expand=True)
+
+        color = '#007AFF' # Mac blue accent
+        
+        # Thick dashed border
+        self.ocr_rect = self.ocr_canvas.create_rectangle(
+            3, 3, init_w-3, init_h-3,
+            outline=color, width=4, dash=(12, 10)
+        )
+        
+        # Bottom-right resize handle
+        self.resize_handle = self.ocr_canvas.create_polygon(
+            init_w-25, init_h, init_w, init_h, init_w, init_h-25,
+            fill=color, outline=""
+        )
+
+        # Scanner button (Top Right)
+        self.scan_btn = tk.Label(
+            self.ocr_win, text=" 扫描 🔍 ", bg=color, fg='white', 
+            font=("Arial", 14, "bold"), cursor='hand2', padx=8, pady=6
+        )
+        self.scan_btn.place(relx=1.0, rely=0.0, anchor='ne', x=-10, y=10)
+        
+        # Close button (Top Left)
+        self.close_btn = tk.Label(
+            self.ocr_win, text=" ✕ ", bg='#FF3B30', fg='white', 
+            font=("Arial", 14, "bold"), cursor='hand2', padx=8, pady=6
+        )
+        self.close_btn.place(relx=0.0, rely=0.0, anchor='nw', x=10, y=10)
+        
+        def close_ocr(e=None):
+            self.ocr_win.withdraw()
+            
+        self.close_btn.bind("<Button-1>", close_ocr)
+
+        # Variables for custom drag/resize
+        self._ocr_drag_mode = None
+        self._ocr_start_x = 0
+        self._ocr_start_y = 0
+        self._ocr_start_w = 0
+        self._ocr_start_h = 0
+        self._ocr_start_win_x = 0
+        self._ocr_start_win_y = 0
+
+        def on_press(event):
+            self._ocr_start_x = event.x_root
+            self._ocr_start_y = event.y_root
+            self._ocr_start_w = self.ocr_win.winfo_width()
+            self._ocr_start_h = self.ocr_win.winfo_height()
+            self._ocr_start_win_x = self.ocr_win.winfo_x()
+            self._ocr_start_win_y = self.ocr_win.winfo_y()
+
+            # If clicked bottom right, resize; else move
+            if event.x > self._ocr_start_w - 30 and event.y > self._ocr_start_h - 30:
+                self._ocr_drag_mode = "resize"
+            else:
+                self._ocr_drag_mode = "move"
+
+        def on_drag(event):
+            dx = event.x_root - self._ocr_start_x
+            dy = event.y_root - self._ocr_start_y
+
+            if self._ocr_drag_mode == "move":
+                new_x = self._ocr_start_win_x + dx
+                new_y = self._ocr_start_win_y + dy
+                self.ocr_win.geometry(f"+{new_x}+{new_y}")
+            elif self._ocr_drag_mode == "resize":
+                new_w = max(200, self._ocr_start_w + dx)
+                new_h = max(150, self._ocr_start_h + dy)
+                self.ocr_win.geometry(f"{new_w}x{new_h}")
+                
+                # Update canvas drawings
+                self.ocr_canvas.coords(self.ocr_rect, 3, 3, new_w-3, new_h-3)
+                self.ocr_canvas.coords(
+                    self.resize_handle,
+                    new_w-25, new_h, new_w, new_h, new_w, new_h-25
+                )
+
+        self.ocr_canvas.bind("<Button-1>", on_press)
+        self.ocr_canvas.bind("<B1-Motion>", on_drag)
+        
+        # Cursor feedback
+        def motion_hover(event):
+            w = self.ocr_win.winfo_width()
+            h = self.ocr_win.winfo_height()
+            if event.x > w - 30 and event.y > h - 30:
+                self.ocr_win.config(cursor="bottom_right_corner")
+            else:
+                self.ocr_win.config(cursor="fleur")
+                
+        self.ocr_canvas.bind("<Motion>", motion_hover)
+        self.ocr_win.bind("<Escape>", close_ocr)
+        
+        def mock_scan(e):
+            print(">>> Scan triggered (UI ONLY)")
+            self.scan_btn.config(text=" 扫描中... ")
+            self.ocr_win.after(1000, lambda: self.scan_btn.config(text=" 扫描 🔍 "))
+            
+        self.scan_btn.bind("<Button-1>", mock_scan)
+        
+        self._force_strict_topmost()
+
     def show_error_dialog(self, msg, title="错误"):
         err_win = tk.Toplevel(self.add_lang_win if hasattr(self, 'add_lang_win') and self.add_lang_win.winfo_exists() else self.root)
         err_win.title(title)
@@ -1286,6 +1409,8 @@ class TranslatorUI:
                             self.root.after(0, self.show_add_lang_dialog)
                         elif payload.get('action') == 'show_remove_lang_dialog':
                             self.root.after(0, self.show_remove_lang_dialog)
+                        elif payload.get('action') == 'show_ocr_overlay':
+                            self.root.after(0, self.show_ocr_overlay)
                         elif payload.get('action') == 'reload_ui_config':
                             self.config = load_config()
                             self._rebuild_context_menu()
