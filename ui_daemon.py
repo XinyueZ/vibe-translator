@@ -802,40 +802,12 @@ class TranslatorUI:
         self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
         self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
         self.context_menu.add_command(label=self.t['en_zh'], command=lambda: self.send_command_to_main('en_zh'))
-        self.context_menu.add_separator()
         
-        # Custom Languages Group
-        self.context_menu.add_command(label=self.t['add_lang'], command=lambda: self.send_command_to_main('add_lang'))
         if 'custom_langs' in self.config and len(self.config['custom_langs']) > 0:
-            self.context_menu.add_command(label=self.t['remove_lang'], command=lambda: self.send_command_to_main('remove_lang'))
-        
-        if 'custom_langs' in self.config:
+            self.context_menu.add_separator()
             for cl in self.config['custom_langs']:
                 label_text = f"• {cl['source']} → {cl['target']}"
                 self.context_menu.add_command(label=label_text, command=lambda cid=cl['id']: self.send_command_to_main(f'custom_translate_{cid}'))
-        
-        self.context_menu.add_separator()
-        
-        self.local_ai_var = tk.BooleanVar(value=self.config.get('use_local_ai', False))
-        def on_widget_toggle_local_ai():
-            self.send_command_to_main('toggle_local_ai')
-            
-        self.context_menu.add_checkbutton(label=self.t['local_ai'], variable=self.local_ai_var, command=on_widget_toggle_local_ai)
-
-        self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', True))
-        def on_widget_toggle_mouse_follow():
-            self.send_command_to_main('toggle_mouse_follow')
-        
-        self.context_menu.add_checkbutton(label=self.t['mouse_follow'], variable=self.mouse_follow_var, command=on_widget_toggle_mouse_follow)
-        self.context_menu.add_command(label=self.t['how_to_use'], command=self.show_toast)
-        
-        self.context_menu.add_command(label=self.t['ui_zh'], command=lambda: self.send_command_to_main('ui_zh'))
-        self.context_menu.add_command(label=self.t['ui_en'], command=lambda: self.send_command_to_main('ui_en'))
-        self.context_menu.add_separator()
-        
-        self.context_menu.add_command(label=self.t['auth'], command=lambda: self.send_command_to_main('auth'))
-        self.context_menu.add_command(label=self.t['restart'], command=lambda: self.send_command_to_main('restart'))
-        self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
     def _change_ollama_model(self, name):
         self.ollama_model_var.set(name)
