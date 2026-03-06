@@ -357,18 +357,36 @@ class TranslatorUI:
             x = self.root.winfo_pointerx()
             y = self.root.winfo_pointery()
             
-            # Simple offset
-            new_x = x + 10
-            new_y = y + 10
+            pos = self.config.get('hover_position', 'top_right')
+            offset_x = 10
+            offset_y = 10
+            widget_w = 60
+            widget_h = 65
+            
+            # Initial positioning based on configuration
+            if pos in ('top_right', 'bottom_right'):
+                new_x = x + offset_x
+            else:
+                new_x = x - widget_w - offset_x
+                
+            if pos in ('bottom_right', 'bottom_left'):
+                new_y = y + offset_y
+            else:
+                new_y = y - widget_h - offset_y
             
             screen_w = self.root.winfo_screenwidth()
             screen_h = self.root.winfo_screenheight()
             
-            # Bound check assuming widget is approx 60x65
-            if new_x + 60 > screen_w:
-                new_x = x - 70
-            if new_y + 65 > screen_h:
-                new_y = y - 75
+            # Bound checks with flip logic
+            if new_x + widget_w > screen_w:
+                new_x = x - widget_w - offset_x
+            elif new_x < 0:
+                new_x = x + offset_x
+                
+            if new_y + widget_h > screen_h:
+                new_y = y - widget_h - offset_y
+            elif new_y < 0:
+                new_y = y + offset_y
                 
             self.widget.geometry(f"+{new_x}+{new_y}")
             
@@ -1270,6 +1288,8 @@ class TranslatorUI:
                             self._rebuild_context_menu()
                         elif payload.get('action') == 'rescue_widget':
                             self.root.after(0, self.rescue_widget)
+                        elif payload.get('action') == 'set_hover_position':
+                            self.config['hover_position'] = payload.get('pos', 'top_right')
                         elif payload.get('action') == 'toggle_mouse_follow':
                             self.mouse_follow = payload.get('state', False)
                             self.config['mouse_follow'] = self.mouse_follow

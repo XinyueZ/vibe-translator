@@ -51,6 +51,10 @@ class TranslatorApp(rumps.App):
         self.i18n = {
             'zh': {
                 'rescue_widget': '找回悬浮',
+                'hover_tr': '右上悬停',
+                'hover_br': '右下悬停',
+                'hover_tl': '左上悬停',
+                'hover_bl': '左下悬停',
                 'auto_zh': '自动检测 → 中文',
                 'auto_de': '自动检测 → 德文',
                 'auto_en': '自动检测 → 英文',
@@ -71,6 +75,10 @@ class TranslatorApp(rumps.App):
             },
             'en': {
                 'rescue_widget': 'Show Widget',
+                'hover_tr': 'Hover Top Right',
+                'hover_br': 'Hover Bottom Right',
+                'hover_tl': 'Hover Top Left',
+                'hover_bl': 'Hover Bottom Left',
                 'auto_zh': 'Auto → ZH',
                 'auto_de': 'Auto → DE',
                 'auto_en': 'Auto → EN',
@@ -106,9 +114,20 @@ class TranslatorApp(rumps.App):
         self.mouse_follow_item = rumps.MenuItem(t['mouse_follow'], callback=self.toggle_mouse_follow)
         self.mouse_follow_item.state = self.mouse_follow
 
+        self.hover_pos = self.config.get('hover_position', 'top_right')
+        self.hover_tr_item = rumps.MenuItem(t['hover_tr'], callback=lambda _: self.set_hover_position('top_right'))
+        self.hover_br_item = rumps.MenuItem(t['hover_br'], callback=lambda _: self.set_hover_position('bottom_right'))
+        self.hover_tl_item = rumps.MenuItem(t['hover_tl'], callback=lambda _: self.set_hover_position('top_left'))
+        self.hover_bl_item = rumps.MenuItem(t['hover_bl'], callback=lambda _: self.set_hover_position('bottom_left'))
+        self._update_hover_checks()
+
         # Translation options in menu
         menu_items = [
             rumps.MenuItem(t['rescue_widget'], callback=self.rescue_widget),
+            self.hover_tr_item,
+            self.hover_br_item,
+            self.hover_tl_item,
+            self.hover_bl_item,
             None,
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             rumps.MenuItem(t['auto_de'], callback=self.translate_auto_to_de),
@@ -166,6 +185,19 @@ class TranslatorApp(rumps.App):
         self.config['mouse_follow'] = self.mouse_follow
         save_config(self.config)
         self._send_to_daemon({'action': 'toggle_mouse_follow', 'state': self.mouse_follow})
+
+    def set_hover_position(self, pos):
+        self.hover_pos = pos
+        self.config['hover_position'] = pos
+        save_config(self.config)
+        self._update_hover_checks()
+        self._send_to_daemon({'action': 'set_hover_position', 'pos': pos})
+        
+    def _update_hover_checks(self):
+        self.hover_tr_item.state = (self.hover_pos == 'top_right')
+        self.hover_br_item.state = (self.hover_pos == 'bottom_right')
+        self.hover_tl_item.state = (self.hover_pos == 'top_left')
+        self.hover_bl_item.state = (self.hover_pos == 'bottom_left')
 
     def change_lang(self, lang):
         if self.ui_lang == lang: return
@@ -247,6 +279,10 @@ class TranslatorApp(rumps.App):
         
         menu_items = [
             rumps.MenuItem(t['rescue_widget'], callback=self.rescue_widget),
+            self.hover_tr_item,
+            self.hover_br_item,
+            self.hover_tl_item,
+            self.hover_bl_item,
             None,
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             rumps.MenuItem(t['auto_de'], callback=self.translate_auto_to_de),
