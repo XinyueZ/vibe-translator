@@ -625,7 +625,19 @@ class TranslatorApp(rumps.App):
             elif target_lang == "德文":
                 style_instruction = "Use duzen (informal 'you') for the German translation. "
 
-            prompt = f"Translate the following text from {source_lang} to {target_lang}. {style_instruction}Only return the translation, no explanations:\n\n{text}"
+            source_lang_prompt = "its original language" if source_lang == "自动检测" else source_lang
+            
+            prompt = (
+                f"You are a professional translator. "
+                f"Translate the following text from {source_lang_prompt} to {target_lang}. "
+                f"{style_instruction}"
+                f"CRITICAL INSTRUCTIONS:\n"
+                f"1. ONLY output the translated text.\n"
+                f"2. DO NOT output the detected language name.\n"
+                f"3. DO NOT output conversational filler like 'Here is the translation'.\n"
+                f"4. Maintain original line breaks and formatting.\n\n"
+                f"Text to translate:\n{text}"
+            )
 
             translation = ""
             is_first = True

@@ -1242,7 +1242,17 @@ class TranslatorUI:
                                     style_instruction = cl['styles'][selected_style]
                                 break
 
-                prompt = f"请将以下完整文本从{self.current_source_lang}翻译成{self.current_target_lang}。\n\n{style_instruction}\n\n重要要求：\n1. 翻译所有内容，包括所有行和段落\n2. 保持原文的换行和格式\n3. 只返回翻译结果，不要添加任何解释或说明\n\n原文：\n{self.current_original}\n\n译文："
+                source_lang_str = "其原始语言" if self.current_source_lang in ("自动检测", "Auto") else self.current_source_lang
+                
+                prompt = (
+                    f"你是一个专业的翻译助手。请将以下文本从{source_lang_str}翻译成{self.current_target_lang}。\n\n"
+                    f"{style_instruction}\n\n"
+                    f"重要要求：\n"
+                    f"1. 只返回翻译结果，**绝对不要**在开头输出“自动检测”或检测到的语言名称！\n"
+                    f"2. 翻译所有内容，包括所有行和段落，保持原文的换行和格式\n"
+                    f"3. 不要添加任何解释或语气词\n\n"
+                    f"原文：\n{self.current_original}\n\n译文："
+                )
 
                 new_translation = ""
                 is_first = True
