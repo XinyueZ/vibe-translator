@@ -92,6 +92,8 @@ class TranslatorUI:
             'zh': {
                 'rescue_widget': '找回悬浮',
                 'auto_zh': '自动检测 → 中文',
+                'auto_de': '自动检测 → 德文',
+                'auto_en': '自动检测 → 英文',
                 'add_lang': '➕ 添加翻译语言',
                 'remove_lang': '➖ 移除翻译语言',
                 'zh_de': '中文 → 德文',
@@ -123,6 +125,8 @@ class TranslatorUI:
             'en': {
                 'rescue_widget': 'Show Widget',
                 'auto_zh': 'Auto → ZH',
+                'auto_de': 'Auto → DE',
+                'auto_en': 'Auto → EN',
                 'add_lang': '➕ Add Language',
                 'remove_lang': '➖ Remove Language',
                 'zh_de': 'ZH → DE',
@@ -792,6 +796,8 @@ class TranslatorUI:
             
         self.context_menu = tk.Menu(self.widget, tearoff=0)
         self.context_menu.add_command(label=self.t['auto_zh'], command=lambda: self.send_command_to_main('auto_zh'))
+        self.context_menu.add_command(label=self.t['auto_de'], command=lambda: self.send_command_to_main('auto_de'))
+        self.context_menu.add_command(label=self.t['auto_en'], command=lambda: self.send_command_to_main('auto_en'))
         self.context_menu.add_command(label=self.t['zh_de'], command=lambda: self.send_command_to_main('zh_de'))
         self.context_menu.add_command(label=self.t['de_zh'], command=lambda: self.send_command_to_main('de_zh'))
         self.context_menu.add_command(label=self.t['zh_en'], command=lambda: self.send_command_to_main('zh_en'))
@@ -831,6 +837,21 @@ class TranslatorUI:
         self.context_menu.add_command(label=self.t['restart'], command=lambda: self.send_command_to_main('restart'))
         self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
+    def _update_backend_label(self):
+        if not hasattr(self, 'backend_label'): return
+        use_local = self.config.get('use_local_ai', False)
+        if use_local:
+            model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
+            backend = f"ollama ({model})"
+        else:
+            model = os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview')
+            use_vertex = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'False').lower() in ('true', '1', 't', 'yes')
+            if use_vertex:
+                backend = f"vertexai ({model})"
+            else:
+                backend = f"genai ({model})"
+        self.backend_label.config(text=backend)
+
     def _build_main_ui(self):
         main_frame = tk.Frame(self.main_win, padx=20, pady=20, bg=self.colors['bg'])
         main_frame.pack(fill=tk.BOTH, expand=True)
@@ -866,6 +887,10 @@ class TranslatorUI:
 
         font_size_arrow = tk.Label(title_frame, text=" ▼", font=("Arial", 8), bg=self.colors['bg'], fg=self.colors['label_fg'])
         font_size_arrow.pack(side=tk.LEFT)
+        
+        self.backend_label = tk.Label(title_frame, text="", font=("Arial", 10, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
+        self.backend_label.pack(side=tk.RIGHT)
+        self._update_backend_label()
 
         # Progress Label
         self.progress_label = tk.Label(main_frame, text="", font=("Arial", 10), bg=self.colors['bg'], fg=self.colors['button_bg'])
@@ -1232,6 +1257,7 @@ class TranslatorUI:
                                 self.local_ai_var.set(self.config['use_local_ai'])
                             except AttributeError:
                                 pass
+                            self.root.after(0, self._update_backend_label)
                         else:
                             # Important: Schedule update_content on the main Tkinter thread
                             self.root.after(0, lambda p=payload: self.update_content(p))

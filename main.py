@@ -52,6 +52,8 @@ class TranslatorApp(rumps.App):
             'zh': {
                 'rescue_widget': '找回悬浮',
                 'auto_zh': '自动检测 → 中文',
+                'auto_de': '自动检测 → 德文',
+                'auto_en': '自动检测 → 英文',
                 'add_lang': '➕ 添加翻译语言',
                 'remove_lang': '➖ 移除翻译语言',
                 'zh_de': '中文 → 德文',
@@ -70,6 +72,8 @@ class TranslatorApp(rumps.App):
             'en': {
                 'rescue_widget': 'Show Widget',
                 'auto_zh': 'Auto → ZH',
+                'auto_de': 'Auto → DE',
+                'auto_en': 'Auto → EN',
                 'add_lang': '➕ Add Language',
                 'remove_lang': '➖ Remove Language',
                 'zh_de': 'ZH → DE',
@@ -107,6 +111,8 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['rescue_widget'], callback=self.rescue_widget),
             None,
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
+            rumps.MenuItem(t['auto_de'], callback=self.translate_auto_to_de),
+            rumps.MenuItem(t['auto_en'], callback=self.translate_auto_to_en),
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
             rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
             rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
@@ -211,6 +217,8 @@ class TranslatorApp(rumps.App):
                             self._rebuild_main_menu()
                             self._send_to_daemon({'action': 'reload_ui_config'})
                         elif cmd == 'auto_zh': self.translate_auto_to_zh(None)
+                        elif cmd == 'auto_de': self.translate_auto_to_de(None)
+                        elif cmd == 'auto_en': self.translate_auto_to_en(None)
                         elif cmd == 'add_lang': self.add_translation_language(None)
                         elif cmd == 'remove_lang': self.remove_translation_language(None)
                         elif cmd == 'zh_de': self.translate_zh_to_de(None)
@@ -241,6 +249,8 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['rescue_widget'], callback=self.rescue_widget),
             None,
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
+            rumps.MenuItem(t['auto_de'], callback=self.translate_auto_to_de),
+            rumps.MenuItem(t['auto_en'], callback=self.translate_auto_to_en),
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
             rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
             rumps.MenuItem(t['zh_en'], callback=self.translate_zh_to_en),
@@ -396,6 +406,28 @@ class TranslatorApp(rumps.App):
             print(f">>> Got text, starting translation: {text[:50]}...")
             sys.stdout.flush()
             self.translate_text(text, "自动检测", "中文", "Chinese")
+
+    def translate_auto_to_de(self, _):
+        """自动检测 → 德文"""
+        print(">>> Menu clicked: 自动检测 → 德文")
+        import sys
+        sys.stdout.flush()
+        text = self.get_selected_text()
+        if text:
+            print(f">>> Got text, starting translation: {text[:50]}...")
+            sys.stdout.flush()
+            self.translate_text(text, "自动检测", "德文", "German")
+
+    def translate_auto_to_en(self, _):
+        """自动检测 → 英文"""
+        print(">>> Menu clicked: 自动检测 → 英文")
+        import sys
+        sys.stdout.flush()
+        text = self.get_selected_text()
+        if text:
+            print(f">>> Got text, starting translation: {text[:50]}...")
+            sys.stdout.flush()
+            self.translate_text(text, "自动检测", "英文", "English")
 
     def translate_zh_to_de(self, _):
         """中文 → 德文"""
