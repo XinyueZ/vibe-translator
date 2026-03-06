@@ -878,14 +878,34 @@ class TranslatorUI:
 
                 prompt = f"请将以下完整文本从{self.current_source_lang}翻译成{self.current_target_lang}。\n\n{style_instruction}\n\n重要要求：\n1. 翻译所有内容，包括所有行和段落\n2. 保持原文的换行和格式\n3. 只返回翻译结果，不要添加任何解释或说明\n\n原文：\n{self.current_original}\n\n译文："
                 
-                response = self.client.models.generate_content(
+                response_stream = self.client.models.generate_content_stream(
                     model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
                     contents=prompt
                 )
-                new_translation = response.text.strip()
+                
+                new_translation = ""
+                is_first = True
+                
+                for chunk in response_stream:
+                    if chunk.text:
+                        new_translation += chunk.text
+                        
+                        def update_chunk(c=chunk.text, first=is_first):
+                            self.trans_text.config(state=tk.NORMAL)
+                            if first:
+                                self.trans_text.delete(1.0, tk.END)
+                            self.trans_text.insert(tk.END, c)
+                            self.trans_text.see(tk.END)
+                            self.trans_text.config(state=tk.DISABLED)
+                            
+                        self.main_win.after(0, update_chunk)
+                        is_first = False
+
+                new_translation = new_translation.strip()
 
                 def update_ui():
                     self.trans_text.config(state=tk.NORMAL)
+                    # We already appended everything, but replace it cleanly at the end
                     self.trans_text.delete(1.0, tk.END)
                     self.trans_text.insert(tk.END, new_translation)
                     self.trans_text.config(state=tk.DISABLED)
@@ -977,6 +997,22 @@ class TranslatorUI:
             
             self.expand_to_main()
             
+        elif status == 'streaming':
+            chunk = payload.get('chunk', '')
+            is_first = payload.get('is_first', False)
+            
+            self.trans_text.config(state=tk.NORMAL)
+            if is_first:
+                self.trans_text.delete(1.0, tk.END)
+            self.trans_text.insert(tk.END, chunk)
+            self.trans_text.see(tk.END)
+            self.trans_text.config(state=tk.DISABLED)
+            
+            self.status_label.config(text=self.t['wait'], fg=self.colors['label_fg'])
+            
+            if not self.main_win.winfo_viewable():
+                self.expand_to_main()
+                
         elif status == 'complete':
             translation = payload.get('translation', '')
             

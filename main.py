@@ -506,12 +506,24 @@ class TranslatorApp(rumps.App):
 
             prompt = f"Translate the following text from {source_lang} to {target_lang}. {style_instruction}Only return the translation, no explanations:\n\n{text}"
 
-            response = self.client.models.generate_content(
+            response_stream = self.client.models.generate_content_stream(
                 model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
                 contents=prompt
             )
 
-            translation = response.text.strip()
+            translation = ""
+            is_first = True
+            for chunk in response_stream:
+                if chunk.text:
+                    translation += chunk.text
+                    self._send_to_daemon({
+                        'status': 'streaming',
+                        'chunk': chunk.text,
+                        'is_first': is_first
+                    })
+                    is_first = False
+
+            translation = translation.strip()
             pyperclip.copy(translation)
 
             # Send final result to UI Daemon
