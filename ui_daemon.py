@@ -837,12 +837,57 @@ class TranslatorUI:
         self.context_menu.add_command(label=self.t['restart'], command=lambda: self.send_command_to_main('restart'))
         self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
+    def _change_ollama_model(self, name):
+        self.ollama_model_var.set(name)
+        self.config['ollama_model'] = name
+        save_config(self.config)
+        self.retranslate(trigger='model')
+
     def _update_backend_label(self):
-        if not hasattr(self, 'backend_label'): return
+        if not hasattr(self, 'backend_frame'): return
+        
+        for widget in self.backend_frame.winfo_children():
+            widget.destroy()
+
         use_local = self.config.get('use_local_ai', False)
         if use_local:
-            model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
-            backend = f"ollama ({model})"
+            import urllib.request
+            host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
+            model_list = []
+            try:
+                req = urllib.request.Request(f"{host}/api/tags")
+                with urllib.request.urlopen(req, timeout=1) as response:
+                    data = json.loads(response.read().decode())
+                    model_list = [m['name'] for m in data.get('models', [])]
+            except Exception:
+                pass
+                
+            current_model = self.config.get('ollama_model', os.getenv('OLLAMA_MODEL', 'qwen2.5:0.5b'))
+            if not model_list:
+                model_list = [current_model]
+                
+            lbl = tk.Label(self.backend_frame, text="ollama", font=("Arial", 10, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
+            lbl.pack(side=tk.LEFT, padx=(0, 5))
+            
+            self.ollama_model_var = tk.StringVar(value=current_model)
+            model_btn = tk.Label(self.backend_frame, textvariable=self.ollama_model_var, font=("Arial", 10), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=2, cursor='hand2')
+            model_btn.pack(side=tk.LEFT)
+            
+            model_arrow = tk.Label(self.backend_frame, text=" ▼", font=("Arial", 8), bg=self.colors['bg'], fg=self.colors['label_fg'])
+            model_arrow.pack(side=tk.LEFT)
+            
+            model_menu = tk.Menu(self.main_win, tearoff=0)
+            for m in model_list:
+                model_menu.add_command(label=m, command=lambda name=m: self._change_ollama_model(name))
+                
+            def show_model_menu(e):
+                try:
+                    model_menu.post(e.x_root, e.y_root)
+                finally:
+                    model_menu.grab_release()
+                    
+            model_btn.bind('<Button-1>', show_model_menu)
+            model_arrow.bind('<Button-1>', show_model_menu)
         else:
             model = os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview')
             use_vertex = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'False').lower() in ('true', '1', 't', 'yes')
@@ -850,7 +895,8 @@ class TranslatorUI:
                 backend = f"vertexai ({model})"
             else:
                 backend = f"genai ({model})"
-        self.backend_label.config(text=backend)
+            lbl = tk.Label(self.backend_frame, text=backend, font=("Arial", 10, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
+            lbl.pack(side=tk.RIGHT)
 
     def _build_main_ui(self):
         main_frame = tk.Frame(self.main_win, padx=20, pady=20, bg=self.colors['bg'])
@@ -888,8 +934,8 @@ class TranslatorUI:
         font_size_arrow = tk.Label(title_frame, text=" ▼", font=("Arial", 8), bg=self.colors['bg'], fg=self.colors['label_fg'])
         font_size_arrow.pack(side=tk.LEFT)
         
-        self.backend_label = tk.Label(title_frame, text="", font=("Arial", 10, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
-        self.backend_label.pack(side=tk.RIGHT)
+        self.backend_frame = tk.Frame(title_frame, bg=self.colors['bg'])
+        self.backend_frame.pack(side=tk.RIGHT)
         self._update_backend_label()
 
         # Progress Label
@@ -959,8 +1005,14 @@ class TranslatorUI:
         self.on_style_change()
 
     def on_style_change(self):
+        self.retranslate(trigger='style')
+
+    def retranslate(self, trigger='style'):
+        if not hasattr(self, 'current_original') or not self.current_original:
+            return
+
         selected_style = self.style_var.get()
-        if "默认" in selected_style or "Default" in selected_style:
+        if trigger == 'style' and ("默认" in selected_style or "Default" in selected_style):
             return
 
         self.progress_label.config(text=self.t['re_trans'])
@@ -969,38 +1021,40 @@ class TranslatorUI:
 
         def translate_with_style():
             try:
-                style_instruction = f"请使用{selected_style}风格进行翻译。"
-                
-                # Check if it's a custom language style
-                direction = f"{self.current_source_lang} → {self.current_target_lang}"
-                if 'custom_langs' in self.config:
-                    for cl in self.config['custom_langs']:
-                        if f"{cl['source']} → {cl['target']}" == direction:
-                            if selected_style in cl.get('styles', {}):
-                                style_instruction = cl['styles'][selected_style]
-                            break
+                style_instruction = ""
+                if "默认" not in selected_style and "Default" not in selected_style:
+                    style_instruction = f"请使用{selected_style}风格进行翻译。"
+
+                    # Check if it's a custom language style
+                    direction = f"{self.current_source_lang} → {self.current_target_lang}"
+                    if 'custom_langs' in self.config:
+                        for cl in self.config['custom_langs']:
+                            if f"{cl['source']} → {cl['target']}" == direction:
+                                if selected_style in cl.get('styles', {}):
+                                    style_instruction = cl['styles'][selected_style]
+                                break
 
                 prompt = f"请将以下完整文本从{self.current_source_lang}翻译成{self.current_target_lang}。\n\n{style_instruction}\n\n重要要求：\n1. 翻译所有内容，包括所有行和段落\n2. 保持原文的换行和格式\n3. 只返回翻译结果，不要添加任何解释或说明\n\n原文：\n{self.current_original}\n\n译文："
-                
+
                 new_translation = ""
                 is_first = True
-                
+
                 if self.config.get('use_local_ai', False):
                     import requests
                     host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
-                    model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
-                    
+                    model = self.config.get('ollama_model') or os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
+
                     payload = {
                         "model": model,
                         "prompt": prompt,
                         "stream": True
                     }
-                    
+
                     try:
                         response = requests.post(f"{host}/api/generate", json=payload, stream=True)
                     except requests.exceptions.ConnectionError:
                         raise Exception("无法连接到 Ollama 服务，请在 terminal 里运行 `ollama serve` 来启动服务。")
-                    
+
                     if response.status_code != 200:
                         error_msg = f"Ollama Error (HTTP {response.status_code})"
                         try:
@@ -1010,14 +1064,14 @@ class TranslatorUI:
                         except:
                             error_msg += f": {response.text}"
                         raise Exception(error_msg)
-                        
+
                     for line in response.iter_lines():
                         if line:
                             data = json.loads(line)
                             if "response" in data:
                                 chunk = data["response"]
                                 new_translation += chunk
-                                
+
                                 def update_chunk(c=chunk, first=is_first):
                                     self.trans_text.config(state=tk.NORMAL)
                                     if first:
@@ -1025,7 +1079,7 @@ class TranslatorUI:
                                     self.trans_text.insert(tk.END, c)
                                     self.trans_text.see(tk.END)
                                     self.trans_text.config(state=tk.DISABLED)
-                                    
+
                                 self.main_win.after(0, update_chunk)
                                 is_first = False
                 else:
@@ -1033,11 +1087,11 @@ class TranslatorUI:
                         model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
                         contents=prompt
                     )
-                    
+
                     for chunk in response_stream:
                         if chunk.text:
                             new_translation += chunk.text
-                            
+
                             def update_chunk(c=chunk.text, first=is_first):
                                 self.trans_text.config(state=tk.NORMAL)
                                 if first:
@@ -1045,10 +1099,10 @@ class TranslatorUI:
                                 self.trans_text.insert(tk.END, c)
                                 self.trans_text.see(tk.END)
                                 self.trans_text.config(state=tk.DISABLED)
-                                
+
                             self.main_win.after(0, update_chunk)
                             is_first = False
-                
+
                 new_translation = new_translation.strip()
 
                 def update_ui():

@@ -538,7 +538,8 @@ class TranslatorApp(rumps.App):
 
         # Determine model name for UI
         if self.use_local_ai:
-            model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
+            self.config = load_config()
+            model = self.config.get('ollama_model') or os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
             model_str = f"Ollama ({model})"
         else:
             gemini_model = os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview')
@@ -585,15 +586,15 @@ class TranslatorApp(rumps.App):
 
             if self.use_local_ai:
                 import requests
+                self.config = load_config()
                 host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
-                model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
-                
+                model = self.config.get('ollama_model') or os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
+
                 payload = {
                     "model": model,
                     "prompt": prompt,
                     "stream": True
-                }
-                
+                }                
                 try:
                     response = requests.post(f"{host}/api/generate", json=payload, stream=True)
                 except requests.exceptions.ConnectionError:
