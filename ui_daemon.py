@@ -901,8 +901,17 @@ class TranslatorUI:
                     }
                     
                     response = requests.post(f"{host}/api/generate", json=payload, stream=True)
-                    response.raise_for_status()
                     
+                    if response.status_code != 200:
+                        error_msg = f"Ollama Error (HTTP {response.status_code})"
+                        try:
+                            error_json = response.json()
+                            if 'error' in error_json:
+                                error_msg += f": {error_json['error']}"
+                        except:
+                            error_msg += f": {response.text}"
+                        raise Exception(error_msg)
+                        
                     for line in response.iter_lines():
                         if line:
                             data = json.loads(line)
@@ -956,8 +965,8 @@ class TranslatorUI:
 
                 self.main_win.after(0, update_ui)
             except Exception as e:
-                def show_error():
-                    self.progress_label.config(text=self.t['trans_fail'])
+                def show_error(err=str(e)):
+                    self.progress_label.config(text=f"{self.t['trans_fail']}: {err[:30]}...")
                     self.style_button.config(cursor='hand2')
                 self.main_win.after(0, show_error)
 

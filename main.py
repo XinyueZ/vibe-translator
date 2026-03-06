@@ -536,7 +536,16 @@ class TranslatorApp(rumps.App):
                 }
                 
                 response = requests.post(f"{host}/api/generate", json=payload, stream=True)
-                response.raise_for_status()
+                
+                if response.status_code != 200:
+                    error_msg = f"Ollama Error (HTTP {response.status_code})"
+                    try:
+                        error_json = response.json()
+                        if 'error' in error_json:
+                            error_msg += f": {error_json['error']}"
+                    except:
+                        error_msg += f": {response.text}"
+                    raise Exception(error_msg)
                 
                 for line in response.iter_lines():
                     if line:
