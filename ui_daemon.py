@@ -1189,18 +1189,40 @@ class TranslatorUI:
         for size in font_sizes:
             self.font_size_menu.add_command(label=str(size), command=lambda s=size: self.select_font_size(s))
 
-        orig_label = tk.Label(main_frame, text=self.t['orig'], font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
+        initial_spacing = round(self.config['font_size'] * 0.309)
+
+        # Create PanedWindow for resizable text areas
+        self.paned_window = tk.PanedWindow(main_frame, orient=tk.VERTICAL, bg=self.colors['bg'], sashwidth=12, sashpad=6, sashrelief=tk.RAISED, bd=0, opaqueresize=True, cursor="sb_v_double_arrow")
+        self.paned_window.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
+
+        top_pane = tk.Frame(self.paned_window, bg=self.colors['bg'])
+        bottom_pane = tk.Frame(self.paned_window, bg=self.colors['bg'])
+
+        self.paned_window.add(top_pane, stretch="always", minsize=50)
+        self.paned_window.add(bottom_pane, stretch="always", minsize=50)
+
+        orig_label = tk.Label(top_pane, text=self.t['orig'], font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
         orig_label.pack(fill=tk.X, pady=(0, 5))
 
-        initial_spacing = round(self.config['font_size'] * 0.309)
-        self.orig_text = scrolledtext.ScrolledText(main_frame, wrap=tk.WORD, font=("Arial", self.config['font_size']), height=5, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], spacing1=initial_spacing, spacing3=initial_spacing)
-        self.orig_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        self.orig_text = scrolledtext.ScrolledText(top_pane, wrap=tk.WORD, font=("Arial", self.config['font_size']), height=5, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], spacing1=initial_spacing, spacing3=initial_spacing)
+        self.orig_text.pack(fill=tk.BOTH, expand=True)
 
-        trans_label = tk.Label(main_frame, text=self.t['trans'], font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
-        trans_label.pack(fill=tk.X, pady=(0, 5))
+        trans_label = tk.Label(bottom_pane, text=self.t['trans'], font=("Arial", 11, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'], anchor='w')
+        trans_label.pack(fill=tk.X, pady=(5, 5))
 
-        self.trans_text = scrolledtext.ScrolledText(main_frame, wrap=tk.WORD, font=("Arial", self.config['font_size']), height=5, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], spacing1=initial_spacing, spacing3=initial_spacing)
-        self.trans_text.pack(fill=tk.BOTH, expand=True, pady=(0, 15))
+        self.trans_text = scrolledtext.ScrolledText(bottom_pane, wrap=tk.WORD, font=("Arial", self.config['font_size']), height=5, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], spacing1=initial_spacing, spacing3=initial_spacing)
+        self.trans_text.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
+
+        # Add visual handle emoji to the sash
+        self.sash_handle = tk.Label(self.paned_window, text="＝", fg=self.colors['label_fg'], bg=self.colors['bg'], cursor="sb_v_double_arrow", font=("Arial", 12))
+        
+        self.paned_window.bind("<B1-Motion>", self._update_sash_handle, add="+")
+        self.paned_window.bind("<Configure>", self._update_sash_handle, add="+")
+        self.root.bind("<ButtonRelease-1>", self._update_sash_handle, add="+")
+        self.sash_handle.bind("<B1-Motion>", self._drag_sash_handle)
+        
+        # Initial placement
+        self.root.after(200, self._update_sash_handle)
 
         self.status_label = tk.Label(main_frame, text=self.t['copied'], font=("Arial", 10), fg=self.colors['status_fg'], bg=self.colors['bg'])
         self.status_label.pack(pady=(5, 0))
