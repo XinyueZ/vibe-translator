@@ -25,7 +25,8 @@ A macOS menu bar translation application powered by **Google Gemini** (Supports 
 - 🎈 **Floating Widget** - Persistent, draggable desktop widget that expands to show translations instantly without spawning new windows
 - 🖱️ **Widget Context Menu** - Hold Ctrl to move to the widget, then Ctrl+Click to access all translation options directly without reaching for the menu bar
 - 🌐 **Bilingual UI** - Easily toggle the entire application interface between English and Chinese
-- ⏳ **Real-time Progress** - UI instantly expands to show the original text and a friendly loading state while waiting for AI translation
+- ⏳ **Real-time Streaming** - UI instantly expands to show the original text and streams the translation back chunk-by-chunk for an immediate, type-writer effect.
+- 🦙 **Local AI Support** - Optionally toggle on "Local AI" to route translations through your local **Ollama** server instantly, completely offline.
 - 👻 **Omnipresent** - Strictly stays above all other apps and follows you across all macOS Spaces/Desktops automatically
 - 🔄 **Multi-Language Support** - Auto-detect to Chinese, plus translation between Chinese, English, and German
 - 🛠️ **Custom Languages & Styles** - Easily add your own language pairs and define custom translation prompts (tones/styles) via the built-in UI
@@ -75,6 +76,13 @@ GOOGLE_CLOUD_PROJECT=your-project-id
 GOOGLE_CLOUD_LOCATION=europe-west3
 
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
+```
+
+**Option C: Local AI via Ollama**
+If you wish to run translation offline using open-source models, you can configure your Ollama endpoint:
+```
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=qwen2.5:1.5b
 ```
 
 > **🧠 Smart Location Routing**: If you are using Vertex AI and set `GEMINI_MODEL` to a name containing `-preview` (e.g., `gemini-3.1-flash-lite-preview`), the app will **automatically override** your `GOOGLE_CLOUD_LOCATION` and route the request to `global`. You do not need to manually change your region when testing preview models!
@@ -164,7 +172,8 @@ MIT
 - 🎈 **圆组件** - 常驻桌面、可随意拖拽的圆，瞬间展开显示翻译结果，告别反复弹窗
 - 🖱️ **圆菜单** - 选中文本后，按住 Ctrl 键移动鼠标至圆上，再保持 **Ctrl+鼠标左键点击** 即可呼出所有翻译选项，无需再将鼠标移至屏幕顶部
 - 🌐 **双语界面** - 一键切换应用程序的所有界面为全中文或全英文
-- ⏳ **实时进度** - 翻译时瞬间展开窗口，显示原文并提示正在为您翻译，告别盲目等待
+- ⏳ **流式输出** - 翻译时瞬间展开窗口，并且像打字机一样分块、流式显示翻译结果，体验极速响应。
+- 🦙 **本地 AI 支持** - 支持一键切换至“本地 AI”，通过你的本地 **Ollama** 服务进行完全离线的翻译。
 - 👻 **无处不在** - 拥有最高系统层级置顶，且会像“幽灵”一样跨越所有 macOS 桌面空间 (Spaces) 跟随你
 - 🔄 **多语言支持** - 自动检测语言并翻译为中文，以及中文、英文、德文互译
 - 🛠️ **自定义语言与风格** - 支持在软件内可视化添加任意语言对，并为它们定制专属的 Prompt（语气风格），翻译时随意切换
@@ -214,6 +223,13 @@ GOOGLE_CLOUD_PROJECT=你的项目ID
 GOOGLE_CLOUD_LOCATION=europe-west3
 
 GEMINI_MODEL=gemini-3.1-flash-lite-preview
+```
+
+**选项 C：通过 Ollama 接入本地 AI**
+如果你希望使用开源大语言模型进行完全离线的翻译，可以配置你的 Ollama 地址：
+```
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=qwen2.5:1.5b
 ```
 
 > **🧠 智能区域路由**：如果您使用 Vertex AI 并且设置的 `GEMINI_MODEL` 名称中包含 `-preview`（例如 `gemini-3.1-flash-lite-preview`），程序会**自动忽略**您配置的 `GOOGLE_CLOUD_LOCATION`，强制将请求路由到 `global` 区域。当您在测试预览版模型时，无需反复手动修改区域配置！
