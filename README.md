@@ -90,10 +90,10 @@ OLLAMA_MODEL=qwen2.5:1.5b
 
 > **Note for Vertex AI users**: To ensure your Google Cloud authentication remains active, it is recommended to run `gcloud auth application-default login` in your terminal every 24 hours to refresh your credentials. Or use the "Auth 刷新授权" button from the menu bar or widget right-click menu.
 
-4. **Grant macOS Accessibility Permission**
-   - Open **System Settings** → **Privacy & Security** → **Accessibility**
-   - Click **+** and add **Terminal** (or your Python executable)
-   - Enable the checkbox
+4. **Grant macOS Permissions**
+   - **Accessibility (For text selection):** Open **System Settings** → **Privacy & Security** → **Accessibility**
+   - **Screen Recording (For OCR feature):** Open **System Settings** → **Privacy & Security** → **Screen Recording**
+   - Click **+** and add **Terminal** (or your Python executable) to both sections and enable the checkboxes.
 
 ### Usage
 
@@ -238,10 +238,10 @@ OLLAMA_MODEL=qwen2.5:1.5b
 
 > **Vertex AI 用户注意**：为了确保您的 Google Cloud 身份验证保持有效，建议每 24 小时在终端中运行一次 `gcloud auth application-default login` 以刷新您的凭证。或者使用菜单栏/圆右键菜单中的 "Auth 刷新授权" 按钮。
 
-4. **授予 macOS 辅助功能权限**
-   - 打开 **系统设置** → **隐私与安全性** → **辅助功能**
-   - 点击 **+** 添加 **Terminal**（或你的 Python 可执行文件）
-   - 勾选启用
+4. **授予 macOS 系统权限**
+   - **辅助功能（用于划词翻译）：**打开 **系统设置** → **隐私与安全性** → **辅助功能**
+   - **屏幕录制（用于截图翻译）：**打开 **系统设置** → **隐私与安全性** → **屏幕录制**
+   - 分别点击 **+** 添加 **Terminal**（或你的 Python 可执行文件）并勾选启用。
 
 ### 使用方法
 
