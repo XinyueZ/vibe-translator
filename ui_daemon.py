@@ -1227,6 +1227,26 @@ class TranslatorUI:
         self.status_label = tk.Label(main_frame, text=self.t['copied'], font=("Arial", 10), fg=self.colors['status_fg'], bg=self.colors['bg'])
         self.status_label.pack(pady=(5, 0))
 
+
+    def _update_sash_handle(self, event=None):
+        try:
+            if not self.paned_window.winfo_ismapped():
+                return
+            x, y = self.paned_window.sash_coord(0)
+            sash_width = int(self.paned_window.cget('sashwidth'))
+            self.sash_handle.place(relx=0.5, y=y + sash_width/2, anchor="center")
+            self.sash_handle.lift()
+        except Exception:
+            pass
+
+    def _drag_sash_handle(self, event):
+        try:
+            y = event.y_root - self.paned_window.winfo_rooty()
+            self.paned_window.sash_place(0, 0, y)
+            self._update_sash_handle()
+        except Exception:
+            pass
+
     def select_font_size(self, size):
         self.font_size_var.set(size)
         self.font_size_button.config(text=str(size))
