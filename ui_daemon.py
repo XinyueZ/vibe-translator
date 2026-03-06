@@ -744,8 +744,8 @@ class TranslatorUI:
 
     def show_ocr_overlay(self):
         if hasattr(self, 'ocr_win') and self.ocr_win.winfo_exists():
-            if hasattr(self, 'scan_btn') and self.scan_btn.winfo_exists():
-                self.scan_btn.config(text=" 扫描 🔍 ")
+            if hasattr(self, 'update_scan_btn_text'):
+                self.update_scan_btn_text(" 扫描 🔍 ")
             self.ocr_win.deiconify()
             self.ocr_win.lift()
             self._force_strict_topmost()
@@ -781,24 +781,48 @@ class TranslatorUI:
             fill=color, outline=""
         )
 
-        # Scanner button (Top Right)
-        self.scan_btn = tk.Label(
-            self.ocr_win, text=" 扫描 🔍 ", bg=color, fg='white', 
-            font=("Arial", 14, "bold"), cursor='hand2', padx=8, pady=6
+        # Scanner button (Top Right) drawn on canvas for transparency
+        self.scan_bg = self.ocr_canvas.create_rectangle(
+            init_w-90, 5, init_w-5, 35, 
+            fill='#007AFF', outline='', stipple='gray50' # gray50 gives approx 50% transparency effect in standard tk
         )
-        self.scan_btn.place(relx=1.0, rely=0.0, anchor='ne', x=-10, y=10)
+        self.scan_txt = self.ocr_canvas.create_text(
+            init_w-47, 20, 
+            text="扫描 🔍", fill='white', font=("Arial", 14, "bold")
+        )
         
-        # Close button (Top Left)
-        self.close_btn = tk.Label(
-            self.ocr_win, text=" ✕ ", bg='#FF3B30', fg='white', 
-            font=("Arial", 14, "bold"), cursor='hand2', padx=8, pady=6
+        # Close button (Top Left) drawn on canvas for transparency
+        self.close_bg = self.ocr_canvas.create_rectangle(
+            5, 5, 45, 35, 
+            fill='#FF3B30', outline='', stipple='gray50'
         )
-        self.close_btn.place(relx=0.0, rely=0.0, anchor='nw', x=10, y=10)
+        self.close_txt = self.ocr_canvas.create_text(
+            25, 20, 
+            text="✕", fill='white', font=("Arial", 14, "bold")
+        )
+
+        def update_btn_text(txt):
+            if hasattr(self, 'ocr_canvas') and self.ocr_canvas.winfo_exists():
+                self.ocr_canvas.itemconfig(self.scan_txt, text=txt)
+                
+        self.update_scan_btn_text = update_btn_text
         
         def close_ocr(e=None):
             self.ocr_win.withdraw()
             
-        self.close_btn.bind("<Button-1>", close_ocr)
+        def on_canvas_click(event):
+            x, y = event.x, event.y
+            w = self.ocr_win.winfo_width()
+            # Check if clicked on close button (5,5 to 45,35)
+            if 5 <= x <= 45 and 5 <= y <= 35:
+                close_ocr()
+                return "break"
+            # Check if clicked on scan button (w-90,5 to w-5,35)
+            elif w-90 <= x <= w-5 and 5 <= y <= 35:
+                perform_scan(event)
+                return "break"
+            # Otherwise let the drag logic handle it
+            on_press(event)
 
         # Variables for custom drag/resize
         self._ocr_drag_mode = None
@@ -843,8 +867,10 @@ class TranslatorUI:
                     self.resize_handle,
                     new_w-25, new_h, new_w, new_h, new_w, new_h-25
                 )
+                self.ocr_canvas.coords(self.scan_bg, new_w-90, 5, new_w-5, 35)
+                self.ocr_canvas.coords(self.scan_txt, new_w-47, 20)
 
-        self.ocr_canvas.bind("<Button-1>", on_press)
+        self.ocr_canvas.bind("<Button-1>", on_canvas_click)
         self.ocr_canvas.bind("<B1-Motion>", on_drag)
         
         # Cursor feedback
@@ -861,7 +887,7 @@ class TranslatorUI:
         
         def perform_scan(e):
             print(">>> Scan triggered")
-            self.scan_btn.config(text=" 扫描中... ")
+            self.update_scan_btn_text(" 扫描中... ")
             self.ocr_win.update()
             
             # Hide to avoid capturing the UI itself
@@ -895,7 +921,7 @@ class TranslatorUI:
                 extracted_text = result.stdout.strip()
                 if extracted_text:
                     pyperclip.copy(extracted_text)
-                    self.scan_btn.config(text=" ✓ 已复制 ")
+                    self.update_scan_btn_text(" ✓ 已复制 ")
                     
                     # Store current mouse position for the menu
                     menu_x = self.root.winfo_pointerx()
@@ -908,21 +934,19 @@ class TranslatorUI:
                         
                     self.root.after(800, cleanup_and_show_menu)
                 else:
-                    self.scan_btn.config(text=" 未找到文字 ")
+                    self.update_scan_btn_text(" 未找到文字 ")
                 
             except Exception as ex:
                 print(f"OCR Error: {ex}")
                 if self.ocr_win.winfo_exists():
-                    self.scan_btn.config(text=" 错误 ")
+                    self.update_scan_btn_text(" 错误 ")
             finally:
                 if self.ocr_win.winfo_exists() and not extracted_text:
                     self.ocr_win.deiconify()
                     # Re-force topmost after re-appearing
                     self._force_strict_topmost()
-                    self.ocr_win.after(2000, lambda: self.scan_btn.config(text=" 扫描 🔍 ") if self.ocr_win.winfo_exists() else None)
+                    self.ocr_win.after(2000, lambda: self.update_scan_btn_text(" 扫描 🔍 ") if self.ocr_win.winfo_exists() else None)
 
-        self.scan_btn.bind("<Button-1>", perform_scan)
-        
         self._force_strict_topmost()
 
     def show_error_dialog(self, msg, title="错误"):
