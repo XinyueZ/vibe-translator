@@ -90,6 +90,7 @@ class TranslatorUI:
         
         self.i18n = {
             'zh': {
+                'rescue_widget': '找回悬浮',
                 'auto_zh': '自动检测 → 中文',
                 'add_lang': '➕ 添加翻译语言',
                 'remove_lang': '➖ 移除翻译语言',
@@ -103,6 +104,7 @@ class TranslatorUI:
                 'local_ai': '本地 AI',
                 'mouse_follow': '鼠标跟随',
                 'how_to_use': '使用方法',
+                'restart': '重启',
                 'quit': '退出',
                 'ctrl_click': 'ctrl+鼠标',
                 'wait': '等待翻译...',
@@ -119,6 +121,7 @@ class TranslatorUI:
                 're_trans': '🔄 正在重新翻译...'
             },
             'en': {
+                'rescue_widget': 'Show Widget',
                 'auto_zh': 'Auto → ZH',
                 'add_lang': '➕ Add Language',
                 'remove_lang': '➖ Remove Language',
@@ -132,6 +135,7 @@ class TranslatorUI:
                 'local_ai': 'Local AI',
                 'mouse_follow': 'Mouse Follow',
                 'how_to_use': 'How to Use',
+                'restart': 'Restart',
                 'quit': 'Quit',
                 'ctrl_click': 'ctrl+click',
                 'wait': 'Waiting for translation...',
@@ -721,6 +725,28 @@ class TranslatorUI:
         sh = err_win.winfo_screenheight()
         err_win.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
 
+    def rescue_widget(self):
+        """强制显示并居中悬浮窗"""
+        try:
+            widget_size = 60
+            x = (self.root.winfo_screenwidth() - widget_size) // 2
+            y = (self.root.winfo_screenheight() - widget_size) // 2
+            
+            self.widget.geometry(f"{widget_size}x{widget_size}+{x}+{y}")
+            self.widget.deiconify()
+            self.widget.lift()
+            self.widget.attributes('-topmost', True)
+            self._force_strict_topmost()
+            
+            # Save the new position
+            self.config['widget_x'] = x
+            self.config['widget_y'] = y
+            save_config(self.config)
+            
+            print(">>> Widget rescued and centered.")
+        except Exception as e:
+            print(f"Failed to rescue widget: {e}")
+
     def send_command_to_main(self, cmd):
         """Send a menu command to the main.py tray application"""
         import socket
@@ -802,6 +828,7 @@ class TranslatorUI:
         self.context_menu.add_separator()
         
         self.context_menu.add_command(label=self.t['auth'], command=lambda: self.send_command_to_main('auth'))
+        self.context_menu.add_command(label=self.t['restart'], command=lambda: self.send_command_to_main('restart'))
         self.context_menu.add_command(label=self.t['quit'], command=lambda: self.send_command_to_main('quit'))
 
     def _build_main_ui(self):
@@ -936,7 +963,7 @@ class TranslatorUI:
                 if self.config.get('use_local_ai', False):
                     import requests
                     host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
-                    model = os.getenv('OLLAMA_MODEL', 'qwen3:8b')
+                    model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
                     
                     payload = {
                         "model": model,
@@ -944,7 +971,10 @@ class TranslatorUI:
                         "stream": True
                     }
                     
-                    response = requests.post(f"{host}/api/generate", json=payload, stream=True)
+                    try:
+                        response = requests.post(f"{host}/api/generate", json=payload, stream=True)
+                    except requests.exceptions.ConnectionError:
+                        raise Exception("无法连接到 Ollama 服务，请在 terminal 里运行 `ollama serve` 来启动服务。")
                     
                     if response.status_code != 200:
                         error_msg = f"Ollama Error (HTTP {response.status_code})"
@@ -1083,7 +1113,17 @@ class TranslatorUI:
 
             self.trans_text.config(state=tk.NORMAL)
             self.trans_text.delete(1.0, tk.END)
-            self.trans_text.insert(tk.END, self.t['call_api'])
+            
+            model_name = payload.get('model_name')
+            if model_name:
+                if self.ui_lang == 'zh':
+                    api_msg = f"⏳ {model_name} 正在为您翻译，请稍候..."
+                else:
+                    api_msg = f"⏳ {model_name} is translating for you, please wait..."
+            else:
+                api_msg = self.t['call_api']
+                
+            self.trans_text.insert(tk.END, api_msg)
             self.trans_text.config(state=tk.DISABLED)
             
             self.progress_label.config(text="")
@@ -1177,6 +1217,8 @@ class TranslatorUI:
                         elif payload.get('action') == 'reload_ui_config':
                             self.config = load_config()
                             self._rebuild_context_menu()
+                        elif payload.get('action') == 'rescue_widget':
+                            self.root.after(0, self.rescue_widget)
                         elif payload.get('action') == 'toggle_mouse_follow':
                             self.mouse_follow = payload.get('state', False)
                             self.config['mouse_follow'] = self.mouse_follow

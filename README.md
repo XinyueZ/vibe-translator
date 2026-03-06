@@ -84,6 +84,7 @@ If you wish to run translation offline using open-source models, you can configu
 OLLAMA_HOST=http://localhost:11434
 OLLAMA_MODEL=qwen2.5:1.5b
 ```
+> **⚠️ Note on Ollama**: Please ensure that you have started your Ollama service before attempting to use it for translations. If you receive a connection error, try running `ollama serve` in your terminal.
 
 > **🧠 Smart Location Routing**: If you are using Vertex AI and set `GEMINI_MODEL` to a name containing `-preview` (e.g., `gemini-3.1-flash-lite-preview`), the app will **automatically override** your `GOOGLE_CLOUD_LOCATION` and route the request to `global`. You do not need to manually change your region when testing preview models!
 
@@ -231,6 +232,7 @@ GEMINI_MODEL=gemini-3.1-flash-lite-preview
 OLLAMA_HOST=http://localhost:11434
 OLLAMA_MODEL=qwen2.5:1.5b
 ```
+> **⚠️ Ollama 注意事项**：在进行本地翻译前，请务必确保已经启动了 Ollama 服务。如果你遇到连接错误提示，请在 terminal 里运行 `ollama serve` 来启动服务。
 
 > **🧠 智能区域路由**：如果您使用 Vertex AI 并且设置的 `GEMINI_MODEL` 名称中包含 `-preview`（例如 `gemini-3.1-flash-lite-preview`），程序会**自动忽略**您配置的 `GOOGLE_CLOUD_LOCATION`，强制将请求路由到 `global` 区域。当您在测试预览版模型时，无需反复手动修改区域配置！
 

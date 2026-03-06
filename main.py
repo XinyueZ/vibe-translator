@@ -50,6 +50,7 @@ class TranslatorApp(rumps.App):
         
         self.i18n = {
             'zh': {
+                'rescue_widget': '找回悬浮',
                 'auto_zh': '自动检测 → 中文',
                 'add_lang': '➕ 添加翻译语言',
                 'remove_lang': '➖ 移除翻译语言',
@@ -63,9 +64,11 @@ class TranslatorApp(rumps.App):
                 'local_ai': '本地 AI',
                 'mouse_follow': '鼠标跟随',
                 'how_to_use': '使用方法',
+                'restart': '重启',
                 'quit': '退出'
             },
             'en': {
+                'rescue_widget': 'Show Widget',
                 'auto_zh': 'Auto → ZH',
                 'add_lang': '➕ Add Language',
                 'remove_lang': '➖ Remove Language',
@@ -79,6 +82,7 @@ class TranslatorApp(rumps.App):
                 'local_ai': 'Local AI',
                 'mouse_follow': 'Mouse Follow',
                 'how_to_use': 'How to Use',
+                'restart': 'Restart',
                 'quit': 'Quit'
             }
         }
@@ -100,6 +104,8 @@ class TranslatorApp(rumps.App):
 
         # Translation options in menu
         menu_items = [
+            rumps.MenuItem(t['rescue_widget'], callback=self.rescue_widget),
+            None,
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
             rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
@@ -129,10 +135,14 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
             rumps.MenuItem(t['auth'], callback=self.refresh_auth),
+            rumps.MenuItem(t['restart'], callback=self.restart_app),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
         ])
         
         self.menu = menu_items
+
+    def rescue_widget(self, _):
+        self._send_to_daemon({'action': 'rescue_widget'})
 
     def toggle_local_ai(self, sender):
         self.use_local_ai = not self.use_local_ai
@@ -212,6 +222,7 @@ class TranslatorApp(rumps.App):
                         elif cmd == 'ui_en': self.change_lang('en')
                         elif cmd == 'toggle_local_ai': self.toggle_local_ai(self.local_ai_item)
                         elif cmd == 'toggle_mouse_follow': self.toggle_mouse_follow(self.mouse_follow_item)
+                        elif cmd == 'restart': self.restart_app(None)
                         elif cmd == 'quit': self.quit_app(None)
                     conn.close()
             except Exception as e:
@@ -227,6 +238,8 @@ class TranslatorApp(rumps.App):
         self.menu.clear()
         
         menu_items = [
+            rumps.MenuItem(t['rescue_widget'], callback=self.rescue_widget),
+            None,
             rumps.MenuItem(t['auto_zh'], callback=self.translate_auto_to_zh),
             rumps.MenuItem(t['zh_de'], callback=self.translate_zh_to_de),
             rumps.MenuItem(t['de_zh'], callback=self.translate_de_to_zh),
@@ -256,6 +269,7 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
             rumps.MenuItem(t['auth'], callback=self.refresh_auth),
+            rumps.MenuItem(t['restart'], callback=self.restart_app),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
         ])
         
@@ -480,7 +494,7 @@ class TranslatorApp(rumps.App):
             print(f"Error sending to UI Daemon: {e}")
 
     def translate_text(self, text, source_lang, target_lang, target_lang_en, custom_lang_id=None):
-        """Translate text using VertexAI"""
+        """Translate text using VertexAI/LocalAI"""
         try:
             rumps.notification(
                 title=f"翻译中: {source_lang} → {target_lang}",
@@ -490,12 +504,25 @@ class TranslatorApp(rumps.App):
         except Exception as e:
             print(f"Notification error: {e}")
 
+        # Determine model name for UI
+        if self.use_local_ai:
+            model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
+            model_str = f"Ollama ({model})"
+        else:
+            gemini_model = os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview')
+            use_vertex = os.getenv('GOOGLE_GENAI_USE_VERTEXAI', 'False').lower() in ('true', '1', 't', 'yes')
+            if use_vertex:
+                model_str = f"VertexAI ({gemini_model})"
+            else:
+                model_str = f"Google GenAI ({gemini_model})"
+
         # Send initial "loading" state to UI Daemon so it pops up immediately
         self._send_to_daemon({
             'status': 'loading',
             'original': text,
             'source_lang': source_lang,
-            'target_lang': target_lang
+            'target_lang': target_lang,
+            'model_name': model_str
         })
 
         # Perform translation in background thread
@@ -527,7 +554,7 @@ class TranslatorApp(rumps.App):
             if self.use_local_ai:
                 import requests
                 host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
-                model = os.getenv('OLLAMA_MODEL', 'qwen3:8b')
+                model = os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
                 
                 payload = {
                     "model": model,
@@ -535,7 +562,10 @@ class TranslatorApp(rumps.App):
                     "stream": True
                 }
                 
-                response = requests.post(f"{host}/api/generate", json=payload, stream=True)
+                try:
+                    response = requests.post(f"{host}/api/generate", json=payload, stream=True)
+                except requests.exceptions.ConnectionError:
+                    raise Exception("无法连接到 Ollama 服务，请在 terminal 里运行 `ollama serve` 来启动服务。")
                 
                 if response.status_code != 200:
                     error_msg = f"Ollama Error (HTTP {response.status_code})"
@@ -643,6 +673,34 @@ class TranslatorApp(rumps.App):
         
         # 发送退出信号给旧的 UI Daemon
         import socket
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(1.0)
+            s.connect(('127.0.0.1', 50051))
+            s.sendall(json.dumps({'action': 'quit'}).encode('utf-8'))
+            s.close()
+        except: pass
+
+        # 启动一个新的独立进程来运行这个脚本
+        subprocess.Popen(
+            [sys.executable, sys.argv[0]],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True # 脱离当前进程组
+        )
+        
+        # 优雅地退出当前应用实例
+        rumps.quit_application()
+
+    def restart_app(self, _):
+        """重启应用"""
+        import sys
+        import subprocess
+        import socket
+        
+        print(">>> 准备重启应用...")
+        
+        # 发送退出信号给旧的 UI Daemon
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.settimeout(1.0)
