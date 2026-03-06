@@ -1213,13 +1213,19 @@ class TranslatorUI:
         self.trans_text = scrolledtext.ScrolledText(bottom_pane, wrap=tk.WORD, font=("Arial", self.config['font_size']), height=5, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], spacing1=initial_spacing, spacing3=initial_spacing)
         self.trans_text.pack(fill=tk.BOTH, expand=True, pady=(0, 5))
 
-        # Add visual handle emoji to the sash
-        self.sash_handle = tk.Label(self.paned_window, text="＝", fg=self.colors['label_fg'], bg=self.colors['bg'], cursor="sb_v_double_arrow", font=("Arial", 12))
+        # Add visual handle (4 dots) to the sash
+        dot_style = {"text": "•", "fg": self.colors['label_fg'], "bg": self.colors['bg'], "cursor": "sb_v_double_arrow", "font": ("Arial", 10)}
+        self.sash_handle1 = tk.Label(self.paned_window, **dot_style)
+        self.sash_handle2 = tk.Label(self.paned_window, **dot_style)
+        self.sash_handle3 = tk.Label(self.paned_window, **dot_style)
+        self.sash_handle4 = tk.Label(self.paned_window, **dot_style)
         
         self.paned_window.bind("<B1-Motion>", self._update_sash_handle, add="+")
         self.paned_window.bind("<Configure>", self._update_sash_handle, add="+")
         self.root.bind("<ButtonRelease-1>", self._update_sash_handle, add="+")
-        self.sash_handle.bind("<B1-Motion>", self._drag_sash_handle)
+        
+        for lbl in (self.sash_handle1, self.sash_handle2, self.sash_handle3, self.sash_handle4):
+            lbl.bind("<B1-Motion>", self._drag_sash_handle)
         
         # Initial placement
         self.root.after(200, self._update_sash_handle)
@@ -1234,8 +1240,22 @@ class TranslatorUI:
                 return
             x, y = self.paned_window.sash_coord(0)
             sash_width = int(self.paned_window.cget('sashwidth'))
-            self.sash_handle.place(relx=0.5, y=y + sash_width/2, anchor="center")
-            self.sash_handle.lift()
+            pw_width = self.paned_window.winfo_width()
+            
+            if pw_width > 10:
+                center_x = pw_width / 2
+                spacing = 10  # Space between dots
+                
+                # Positions for 4 centered dots
+                self.sash_handle1.place(x=center_x - 1.5 * spacing, y=y + sash_width/2, anchor="center")
+                self.sash_handle2.place(x=center_x - 0.5 * spacing, y=y + sash_width/2, anchor="center")
+                self.sash_handle3.place(x=center_x + 0.5 * spacing, y=y + sash_width/2, anchor="center")
+                self.sash_handle4.place(x=center_x + 1.5 * spacing, y=y + sash_width/2, anchor="center")
+                
+                self.sash_handle1.lift()
+                self.sash_handle2.lift()
+                self.sash_handle3.lift()
+                self.sash_handle4.lift()
         except Exception:
             pass
 
