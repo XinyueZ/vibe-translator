@@ -1059,6 +1059,12 @@ class TranslatorUI:
                 label_text = f"• {cl['source']} → {cl['target']}"
                 self.context_menu.add_command(label=label_text, command=lambda cid=cl['id']: self.send_command_to_main(f'custom_translate_{cid}'))
 
+        # Add Mouse Follow as a separate group
+        self.context_menu.add_separator()
+        if not hasattr(self, 'mouse_follow_var'):
+            self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', True))
+        self.context_menu.add_checkbutton(label=self.t['mouse_follow'], variable=self.mouse_follow_var, command=lambda: self.send_command_to_main('toggle_mouse_follow'))
+
     def _change_ollama_model(self, name):
         self.ollama_model_var.set(name)
         self.config['ollama_model'] = name
