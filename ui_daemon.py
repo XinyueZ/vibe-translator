@@ -342,17 +342,32 @@ class TranslatorUI:
         # If the main window is NOT visible, the widget SHOULD be visible
         if not self.main_win.winfo_viewable():
             try:
+                # Forcefully ensure it's not withdrawn or iconified
                 if self.widget.state() != 'normal':
                     self.widget.deiconify()
+                
+                # Re-apply topmost attribute
+                self.widget.attributes('-topmost', 1)
                 self.widget.lift()
-                self.widget.attributes('-topmost', True)
+                
+                # Check if it's accidentally off-screen and rescue it
+                screen_w = self.root.winfo_screenwidth()
+                screen_h = self.root.winfo_screenheight()
+                wx = self.widget.winfo_x()
+                wy = self.widget.winfo_y()
+                
+                # If it's completely out of bounds (more than 100px off screen), reset to center
+                if wx < -100 or wy < -100 or wx > screen_w or wy > screen_h:
+                    print(">>> Watchdog: Widget went off-screen, rescuing to center.")
+                    self.widget.geometry(f"+{screen_w//2}+{screen_h//2}")
+                    
                 # Re-assert native macOS topmost level gently
                 self._force_strict_topmost()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"Watchdog error: {e}")
         
-        # Run this check every 2000ms (2 seconds)
-        self.root.after(2000, self._start_visibility_watchdog)
+        # Run this check every 1000ms (1 second) for more aggressive recovery
+        self.root.after(1000, self._start_visibility_watchdog)
 
     def _format_lang(self, lang_str):
         if self.ui_lang == 'en':
@@ -990,6 +1005,7 @@ class TranslatorUI:
             
         self.main_win.withdraw()
         self.widget.deiconify()
+        self.widget.attributes('-topmost', 1)
         self.widget.lift()
         self.root.update_idletasks()
         self.root.after(50, self._force_strict_topmost)
