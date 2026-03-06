@@ -848,12 +848,58 @@ class TranslatorUI:
         self.ocr_canvas.bind("<Motion>", motion_hover)
         self.ocr_win.bind("<Escape>", close_ocr)
         
-        def mock_scan(e):
-            print(">>> Scan triggered (UI ONLY)")
+        def perform_scan(e):
+            print(">>> Scan triggered")
             self.scan_btn.config(text=" 扫描中... ")
-            self.ocr_win.after(1000, lambda: self.scan_btn.config(text=" 扫描 🔍 "))
+            self.ocr_win.update()
             
-        self.scan_btn.bind("<Button-1>", mock_scan)
+            # Hide to avoid capturing the UI itself
+            self.ocr_win.withdraw()
+            
+            # Use after() to allow OS to process the window hide
+            self.root.after(150, execute_scan)
+
+        def execute_scan():
+            import subprocess
+            import tempfile
+            import pyperclip
+            import os
+            
+            try:
+                x = self.ocr_win.winfo_rootx()
+                y = self.ocr_win.winfo_rooty()
+                w = self.ocr_win.winfo_width()
+                h = self.ocr_win.winfo_height()
+                
+                tmp_img = os.path.join(tempfile.gettempdir(), "vibe_ocr_capture.png")
+                
+                # macOS screencapture
+                rect = f"{x},{y},{w},{h}"
+                subprocess.run(["screencapture", "-x", f"-R{rect}", tmp_img])
+                
+                # Run the Swift script
+                script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mac_ocr.swift")
+                result = subprocess.run(["swift", script_path, tmp_img], capture_output=True, text=True)
+                
+                extracted_text = result.stdout.strip()
+                if extracted_text:
+                    pyperclip.copy(extracted_text)
+                    self.scan_btn.config(text=" ✓ 已复制 ")
+                else:
+                    self.scan_btn.config(text=" 未找到文字 ")
+                
+            except Exception as ex:
+                print(f"OCR Error: {ex}")
+                if self.ocr_win.winfo_exists():
+                    self.scan_btn.config(text=" 错误 ")
+            finally:
+                if self.ocr_win.winfo_exists():
+                    self.ocr_win.deiconify()
+                    # Re-force topmost after re-appearing
+                    self._force_strict_topmost()
+                    self.ocr_win.after(2000, lambda: self.scan_btn.config(text=" 扫描 🔍 ") if self.ocr_win.winfo_exists() else None)
+
+        self.scan_btn.bind("<Button-1>", perform_scan)
         
         self._force_strict_topmost()
 
