@@ -301,7 +301,7 @@ class TranslatorUI:
         self.ctrl_pressed = False
         
         try:
-            from pynput import keyboard
+            from pynput import keyboard, mouse
             def on_press(key):
                 if key == keyboard.Key.ctrl or key == keyboard.Key.ctrl_l or key == keyboard.Key.ctrl_r:
                     self.ctrl_pressed = True
@@ -310,6 +310,27 @@ class TranslatorUI:
                     self.ctrl_pressed = False
             self.kb_listener = keyboard.Listener(on_press=on_press, on_release=on_release)
             self.kb_listener.start()
+            
+            def on_click(x, y, button, pressed):
+                if pressed and getattr(self, 'mouse_follow', True) and not getattr(self.main_win, 'winfo_viewable', lambda: False)():
+                    # 强行解除可能的拖拽卡死状态
+                    self._is_dragging = False
+                    
+                    # 当用户在任意地方点击时，立刻强制悬浮圆吸附过来
+                    def snap_to_cursor():
+                        if self.main_win.winfo_viewable(): return
+                        new_x = int(x) + 10
+                        new_y = int(y) + 10
+                        screen_w = self.root.winfo_screenwidth()
+                        screen_h = self.root.winfo_screenheight()
+                        if new_x + 60 > screen_w: new_x = int(x) - 70
+                        if new_y + 65 > screen_h: new_y = int(y) - 75
+                        self.widget.geometry(f"+{new_x}+{new_y}")
+                        
+                    self.root.after(0, snap_to_cursor)
+
+            self.mouse_listener = mouse.Listener(on_click=on_click)
+            self.mouse_listener.start()
         except ImportError:
             pass
 
