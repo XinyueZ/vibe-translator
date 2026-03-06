@@ -60,6 +60,7 @@ class TranslatorApp(rumps.App):
                 'auth': 'Auth 刷新授权',
                 'ui_zh': '界面中文',
                 'ui_en': '界面英文',
+                'local_ai': '本地 AI',
                 'mouse_follow': '鼠标跟随',
                 'how_to_use': '使用方法',
                 'quit': '退出'
@@ -75,6 +76,7 @@ class TranslatorApp(rumps.App):
                 'auth': 'Auth Refresh',
                 'ui_zh': 'UI: Chinese',
                 'ui_en': 'UI: English',
+                'local_ai': 'Local AI',
                 'mouse_follow': 'Mouse Follow',
                 'how_to_use': 'How to Use',
                 'quit': 'Quit'
@@ -87,6 +89,10 @@ class TranslatorApp(rumps.App):
 
         # Start background listener for widget commands
         self.start_command_listener()
+
+        self.use_local_ai = self.config.get('use_local_ai', False)
+        self.local_ai_item = rumps.MenuItem(t['local_ai'], callback=self.toggle_local_ai)
+        self.local_ai_item.state = self.use_local_ai
 
         self.mouse_follow = self.config.get('mouse_follow', True)
         self.mouse_follow_item = rumps.MenuItem(t['mouse_follow'], callback=self.toggle_mouse_follow)
@@ -116,6 +122,7 @@ class TranslatorApp(rumps.App):
         menu_items.append(None) # Separator for the group
                 
         menu_items.extend([
+            self.local_ai_item,
             self.mouse_follow_item,
             rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
@@ -127,6 +134,12 @@ class TranslatorApp(rumps.App):
         
         self.menu = menu_items
 
+    def toggle_local_ai(self, sender):
+        self.use_local_ai = not self.use_local_ai
+        sender.state = self.use_local_ai
+        self.config['use_local_ai'] = self.use_local_ai
+        save_config(self.config)
+        self._send_to_daemon({'action': 'toggle_local_ai', 'state': self.use_local_ai})
 
     def show_how_to_use(self, _):
         self._send_to_daemon({'action': 'show_how_to_use'})
@@ -197,6 +210,7 @@ class TranslatorApp(rumps.App):
                         elif cmd == 'auth': self.refresh_auth(None)
                         elif cmd == 'ui_zh': self.change_lang('zh')
                         elif cmd == 'ui_en': self.change_lang('en')
+                        elif cmd == 'toggle_local_ai': self.toggle_local_ai(self.local_ai_item)
                         elif cmd == 'toggle_mouse_follow': self.toggle_mouse_follow(self.mouse_follow_item)
                         elif cmd == 'quit': self.quit_app(None)
                     conn.close()
@@ -235,6 +249,7 @@ class TranslatorApp(rumps.App):
         menu_items.append(None) # Separator
                 
         menu_items.extend([
+            self.local_ai_item,
             self.mouse_follow_item,
             rumps.MenuItem(t['how_to_use'], callback=self.show_how_to_use),
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
@@ -506,22 +521,50 @@ class TranslatorApp(rumps.App):
 
             prompt = f"Translate the following text from {source_lang} to {target_lang}. {style_instruction}Only return the translation, no explanations:\n\n{text}"
 
-            response_stream = self.client.models.generate_content_stream(
-                model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
-                contents=prompt
-            )
-
             translation = ""
             is_first = True
-            for chunk in response_stream:
-                if chunk.text:
-                    translation += chunk.text
-                    self._send_to_daemon({
-                        'status': 'streaming',
-                        'chunk': chunk.text,
-                        'is_first': is_first
-                    })
-                    is_first = False
+
+            if self.use_local_ai:
+                import requests
+                host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
+                model = os.getenv('OLLAMA_MODEL', 'qwen3:8b')
+                
+                payload = {
+                    "model": model,
+                    "prompt": prompt,
+                    "stream": True
+                }
+                
+                response = requests.post(f"{host}/api/generate", json=payload, stream=True)
+                response.raise_for_status()
+                
+                for line in response.iter_lines():
+                    if line:
+                        data = json.loads(line)
+                        if "response" in data:
+                            chunk = data["response"]
+                            translation += chunk
+                            self._send_to_daemon({
+                                'status': 'streaming',
+                                'chunk': chunk,
+                                'is_first': is_first
+                            })
+                            is_first = False
+            else:
+                response_stream = self.client.models.generate_content_stream(
+                    model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
+                    contents=prompt
+                )
+
+                for chunk in response_stream:
+                    if chunk.text:
+                        translation += chunk.text
+                        self._send_to_daemon({
+                            'status': 'streaming',
+                            'chunk': chunk.text,
+                            'is_first': is_first
+                        })
+                        is_first = False
 
             translation = translation.strip()
             pyperclip.copy(translation)

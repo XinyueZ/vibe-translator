@@ -100,6 +100,7 @@ class TranslatorUI:
                 'auth': 'Auth 刷新授权',
                 'ui_zh': '界面中文',
                 'ui_en': '界面英文',
+                'local_ai': '本地 AI',
                 'mouse_follow': '鼠标跟随',
                 'how_to_use': '使用方法',
                 'quit': '退出',
@@ -128,6 +129,7 @@ class TranslatorUI:
                 'auth': 'Auth Refresh',
                 'ui_zh': 'UI: Chinese',
                 'ui_en': 'UI: English',
+                'local_ai': 'Local AI',
                 'mouse_follow': 'Mouse Follow',
                 'how_to_use': 'How to Use',
                 'quit': 'Quit',
@@ -738,6 +740,12 @@ class TranslatorUI:
         
         self.context_menu.add_separator()
         
+        self.local_ai_var = tk.BooleanVar(value=self.config.get('use_local_ai', False))
+        def on_widget_toggle_local_ai():
+            self.send_command_to_main('toggle_local_ai')
+            
+        self.context_menu.add_checkbutton(label=self.t['local_ai'], variable=self.local_ai_var, command=on_widget_toggle_local_ai)
+
         self.mouse_follow_var = tk.BooleanVar(value=self.config.get('mouse_follow', True))
         def on_widget_toggle_mouse_follow():
             self.send_command_to_main('toggle_mouse_follow')
@@ -878,29 +886,61 @@ class TranslatorUI:
 
                 prompt = f"请将以下完整文本从{self.current_source_lang}翻译成{self.current_target_lang}。\n\n{style_instruction}\n\n重要要求：\n1. 翻译所有内容，包括所有行和段落\n2. 保持原文的换行和格式\n3. 只返回翻译结果，不要添加任何解释或说明\n\n原文：\n{self.current_original}\n\n译文："
                 
-                response_stream = self.client.models.generate_content_stream(
-                    model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
-                    contents=prompt
-                )
-                
                 new_translation = ""
                 is_first = True
                 
-                for chunk in response_stream:
-                    if chunk.text:
-                        new_translation += chunk.text
-                        
-                        def update_chunk(c=chunk.text, first=is_first):
-                            self.trans_text.config(state=tk.NORMAL)
-                            if first:
-                                self.trans_text.delete(1.0, tk.END)
-                            self.trans_text.insert(tk.END, c)
-                            self.trans_text.see(tk.END)
-                            self.trans_text.config(state=tk.DISABLED)
+                if self.config.get('use_local_ai', False):
+                    import requests
+                    host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
+                    model = os.getenv('OLLAMA_MODEL', 'qwen3:8b')
+                    
+                    payload = {
+                        "model": model,
+                        "prompt": prompt,
+                        "stream": True
+                    }
+                    
+                    response = requests.post(f"{host}/api/generate", json=payload, stream=True)
+                    response.raise_for_status()
+                    
+                    for line in response.iter_lines():
+                        if line:
+                            data = json.loads(line)
+                            if "response" in data:
+                                chunk = data["response"]
+                                new_translation += chunk
+                                
+                                def update_chunk(c=chunk, first=is_first):
+                                    self.trans_text.config(state=tk.NORMAL)
+                                    if first:
+                                        self.trans_text.delete(1.0, tk.END)
+                                    self.trans_text.insert(tk.END, c)
+                                    self.trans_text.see(tk.END)
+                                    self.trans_text.config(state=tk.DISABLED)
+                                    
+                                self.main_win.after(0, update_chunk)
+                                is_first = False
+                else:
+                    response_stream = self.client.models.generate_content_stream(
+                        model=os.getenv('GEMINI_MODEL', 'gemini-3.1-flash-lite-preview'),
+                        contents=prompt
+                    )
+                    
+                    for chunk in response_stream:
+                        if chunk.text:
+                            new_translation += chunk.text
                             
-                        self.main_win.after(0, update_chunk)
-                        is_first = False
-
+                            def update_chunk(c=chunk.text, first=is_first):
+                                self.trans_text.config(state=tk.NORMAL)
+                                if first:
+                                    self.trans_text.delete(1.0, tk.END)
+                                self.trans_text.insert(tk.END, c)
+                                self.trans_text.see(tk.END)
+                                self.trans_text.config(state=tk.DISABLED)
+                                
+                            self.main_win.after(0, update_chunk)
+                            is_first = False
+                
                 new_translation = new_translation.strip()
 
                 def update_ui():
@@ -921,10 +961,10 @@ class TranslatorUI:
                     self.style_button.config(cursor='hand2')
                 self.main_win.after(0, show_error)
 
-        if self.client:
+        if self.client or self.config.get('use_local_ai', False):
             threading.Thread(target=translate_with_style, daemon=True).start()
         else:
-            self.progress_label.config(text="❌ VertexAI Error")
+            self.progress_label.config(text="❌ AI Client Error")
             self.style_button.config(cursor='hand2')
 
     def collapse_to_widget(self):
@@ -1088,6 +1128,12 @@ class TranslatorUI:
                             self.config['mouse_follow'] = self.mouse_follow
                             try:
                                 self.mouse_follow_var.set(self.mouse_follow)
+                            except AttributeError:
+                                pass
+                        elif payload.get('action') == 'toggle_local_ai':
+                            self.config['use_local_ai'] = payload.get('state', False)
+                            try:
+                                self.local_ai_var.set(self.config['use_local_ai'])
                             except AttributeError:
                                 pass
                         else:
