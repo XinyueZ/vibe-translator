@@ -260,12 +260,16 @@ class TranslatorUI:
 
         # Context Menu for the widget
         self._rebuild_context_menu()
+        self._context_menu_open = False
 
         def show_context_menu(event):
+            self._context_menu_open = True
             try:
                 self.context_menu.post(event.x_root, event.y_root)
             finally:
                 self.context_menu.grab_release()
+                # Use a slight delay to allow menu clicks to process before unsetting the flag
+                self.root.after(200, lambda: setattr(self, '_context_menu_open', False))
 
         for ui_element in (self.widget_canvas,):
             ui_element.bind("<Button-2>", show_context_menu)
@@ -316,9 +320,13 @@ class TranslatorUI:
                     # 强行解除可能的拖拽卡死状态
                     self._is_dragging = False
                     
+                    # 只有在没有打开右键菜单的时候，才执行全局吸附，防止点击菜单项被中断
+                    if getattr(self, '_context_menu_open', False):
+                        return
+                    
                     # 当用户在任意地方点击时，立刻强制悬浮圆吸附过来
                     def snap_to_cursor():
-                        if self.main_win.winfo_viewable(): return
+                        if self.main_win.winfo_viewable() or getattr(self, '_context_menu_open', False): return
                         new_x = int(x) + 10
                         new_y = int(y) + 10
                         screen_w = self.root.winfo_screenwidth()
