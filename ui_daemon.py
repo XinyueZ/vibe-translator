@@ -832,8 +832,9 @@ class TranslatorUI:
                 new_y = self._ocr_start_win_y + dy
                 self.ocr_win.geometry(f"+{new_x}+{new_y}")
             elif self._ocr_drag_mode == "resize":
-                new_w = max(200, self._ocr_start_w + dx)
-                new_h = max(150, self._ocr_start_h + dy)
+                # Min size 50x50 to allow capturing a single character while keeping drag handles reachable
+                new_w = max(50, self._ocr_start_w + dx)
+                new_h = max(50, self._ocr_start_h + dy)
                 self.ocr_win.geometry(f"{new_w}x{new_h}")
                 
                 # Update canvas drawings
