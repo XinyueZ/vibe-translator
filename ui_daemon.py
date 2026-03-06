@@ -272,14 +272,22 @@ class TranslatorUI:
         self._rebuild_context_menu()
         self._context_menu_open = False
 
-        def show_context_menu(event):
+        def show_context_menu(event=None, x=None, y=None):
             self._context_menu_open = True
             try:
-                self.context_menu.post(event.x_root, event.y_root)
+                # If event is provided, use event coordinates, otherwise use x/y or pointer
+                if event:
+                    px, py = event.x_root, event.y_root
+                else:
+                    px = x if x is not None else self.root.winfo_pointerx()
+                    py = y if y is not None else self.root.winfo_pointery()
+                self.context_menu.post(px, py)
             finally:
                 self.context_menu.grab_release()
                 # Use a slight delay to allow menu clicks to process before unsetting the flag
                 self.root.after(200, lambda: setattr(self, '_context_menu_open', False))
+                
+        self.show_context_menu_programmatic = show_context_menu
 
         for ui_element in (self.widget_canvas,):
             ui_element.bind("<Button-2>", show_context_menu)
@@ -885,6 +893,17 @@ class TranslatorUI:
                 if extracted_text:
                     pyperclip.copy(extracted_text)
                     self.scan_btn.config(text=" ✓ 已复制 ")
+                    
+                    # Store current mouse position for the menu
+                    menu_x = self.root.winfo_pointerx()
+                    menu_y = self.root.winfo_pointery()
+                    
+                    def cleanup_and_show_menu():
+                        if self.ocr_win.winfo_exists():
+                            self.ocr_win.withdraw()
+                        self.show_context_menu_programmatic(x=menu_x, y=menu_y)
+                        
+                    self.root.after(800, cleanup_and_show_menu)
                 else:
                     self.scan_btn.config(text=" 未找到文字 ")
                 
@@ -893,7 +912,7 @@ class TranslatorUI:
                 if self.ocr_win.winfo_exists():
                     self.scan_btn.config(text=" 错误 ")
             finally:
-                if self.ocr_win.winfo_exists():
+                if self.ocr_win.winfo_exists() and not extracted_text:
                     self.ocr_win.deiconify()
                     # Re-force topmost after re-appearing
                     self._force_strict_topmost()
