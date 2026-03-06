@@ -6,7 +6,7 @@
 
 ## English
 
-A macOS menu bar translation application powered by **Google Gemini** (Supports both Google AI Studio API Keys and Google Cloud Vertex AI).
+A macOS menu bar translation application powered by **Google Gemini** (Supports both Google AI Studio API Keys and Google Cloud Vertex AI) and local **Ollama** models.
 
 ### Screenshots
 
@@ -154,7 +154,7 @@ MIT
 
 ## 中文
 
-一个基于 **Google Gemini** 的 macOS 菜单栏翻译工具（同时支持 Google AI Studio API Key 和 Google Cloud Vertex AI 两种接入方式）。
+一个基于 **Google Gemini** 的 macOS 菜单栏翻译工具（同时支持 Google AI Studio API Key、Google Cloud Vertex AI 两种接入方式，以及本地 **Ollama** 大模型）。
 
 ### 界面截图
 
