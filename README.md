@@ -19,6 +19,11 @@ A macOS menu bar translation application powered by **Google Gemini** (Supports 
   <p><i>Left: Floating widget. Middle: Translation window. Right: Usage instructions.</i></p>
 </div>
 
+#### Screenshot Translation (OCR)
+<div align="center">
+  <img src="assets/ocr.gif" alt="Screenshot Translation (OCR)" width="800"/>
+</div>
+
 ### Features
 
 - 🌍 **Menu Bar Integration** - Lives in your macOS menu bar
@@ -32,6 +37,7 @@ A macOS menu bar translation application powered by **Google Gemini** (Supports 
 - 🛠️ **Custom Languages & Styles** - Easily add your own language pairs and define custom translation prompts (tones/styles) via the built-in UI
 - 🎨 **Style Options** - Choose translation tones dynamically from the expanded UI dropdown
 - 🎯 **Text Selection** - Select text anywhere and translate instantly
+- 📸 **Screenshot Translation (OCR)** - Select any area of your screen to extract and translate text instantly
 - 💬 **Elegant UI** - Clean, theme-aware dialog with resizable windows
 - ⚡ **Fast Translation** - Powered by Gemini 3.1 Flash Lite Preview
 - 🔑 **No Third-Party Dependencies** - Completely independent. No subscription to third-party tools required. Simply use your own enterprise Google Cloud Vertex AI credentials, or get a free API Key from [Google AI Studio](https://aistudio.google.com/u/0/api-keys) to start translating immediately.
@@ -121,6 +127,7 @@ Keep the Terminal window open (you can minimize it).
 5. The app instantly expands to show your original text and a loading indicator
 6. Once translated, the result appears and is copied to your clipboard
 7. Press `Esc` or `Cmd+W` to close the dialog and collapse it back to a floating widget
+8. **Screenshot Translation:** Click the menu bar icon (or Ctrl+Click the widget) and select **"📸 OCR Translate"**. Draw a box over any text on your screen to extract and translate it automatically.
 
 **Change UI Language:**
 Ctrl+Click the floating widget or click the menu bar icon, and select **"UI: English"** or **"界面中文"** to instantly switch the app's interface language.
@@ -167,6 +174,11 @@ MIT
   <p><i>左：常驻桌面的圆菜单。中：瞬间展开的翻译结果主窗口。右：使用方法说明。</i></p>
 </div>
 
+#### 截图翻译 (OCR)
+<div align="center">
+  <img src="assets/ocr.gif" alt="截图翻译演示" width="800"/>
+</div>
+
 ### 功能特性
 
 - 🌍 **菜单栏集成** - 常驻在 macOS 菜单栏
@@ -180,6 +192,7 @@ MIT
 - 🛠️ **自定义语言与风格** - 支持在软件内可视化添加任意语言对，并为它们定制专属的 Prompt（语气风格），翻译时随意切换
 - 🎨 **风格选项** - 支持在翻译结果界面，一键切换各种内置及您自定义的翻译风格
 - 🎯 **文本选择** - 在任何地方选中文本即可翻译
+- 📸 **截图翻译 (OCR)** - 随时随地框选屏幕任意区域，瞬间提取并翻译文字
 - 💬 **优雅界面** - 简洁、跟随系统主题、可调整大小的对话框
 - ⚡ **快速翻译** - 使用 Gemini 3.1 Flash Lite Preview 模型
 - 🔑 **无第三方依赖，完全独立** - 本程序完全不需要依赖任何第三方翻译软件或代理服务。只要您有自己的企业级 Google Cloud Vertex AI 后台，或者在 [Google AI Studio](https://aistudio.google.com/u/0/api-keys) 申请了（免费的）API Key，填入配置后即可直接使用！
@@ -269,6 +282,7 @@ python main.py
 5. 圆会瞬间展开，显示你选中的原文和加载动画
 6. 翻译完成后，结果会自动显示并复制到剪贴板
 7. 按 `Esc` 或 `Cmd+W` 关闭结果窗口，它会自动缩回变成圆
+8. **截图翻译：**在菜单栏或圆的右键菜单中选择 **"📸 截图翻译"**。然后在屏幕上框选任意包含文字的区域，即可自动提取文字并翻译。
 
 **切换界面语言：**
 Ctrl+鼠标左键点击圆或点击顶部菜单栏，选择 **"界面英文"** 或 **"UI: Chinese"** 即可瞬间切换界面的语言。
