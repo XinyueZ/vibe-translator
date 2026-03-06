@@ -14,8 +14,8 @@ import tempfile
 from google import genai
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables (override existing ones to ensure .env takes precedence)
+load_dotenv(override=True)
 
 
 def load_config():

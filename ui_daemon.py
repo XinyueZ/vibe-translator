@@ -16,8 +16,8 @@ import pyperclip
 from google import genai
 from dotenv import load_dotenv
 
-# Load environment variables
-load_dotenv()
+# Load environment variables (override existing ones to ensure .env takes precedence)
+load_dotenv(override=True)
 
 CONFIG_FILE = os.path.expanduser('~/.vibe_translator_config.json')
 PORT = 50051  # Local port for IPC
