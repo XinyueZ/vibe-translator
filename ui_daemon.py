@@ -744,6 +744,8 @@ class TranslatorUI:
 
     def show_ocr_overlay(self):
         if hasattr(self, 'ocr_win') and self.ocr_win.winfo_exists():
+            if hasattr(self, 'scan_btn') and self.scan_btn.winfo_exists():
+                self.scan_btn.config(text=" 扫描 🔍 ")
             self.ocr_win.deiconify()
             self.ocr_win.lift()
             self._force_strict_topmost()
