@@ -365,7 +365,9 @@ class TranslatorUI:
         except ImportError:
             pass
 
+
         self.root.after(20, self._mouse_follow_loop)
+        self._update_dock_icon()
 
     def _mouse_follow_loop(self):
         if (self.mouse_follow and not self.ctrl_pressed and not self.main_win.winfo_viewable() 
@@ -439,6 +441,55 @@ class TranslatorUI:
         
         # Run this check every 1000ms (1 second) for more aggressive recovery
         self.root.after(1000, self._start_visibility_watchdog)
+
+
+    def _update_dock_icon(self):
+        try:
+            from AppKit import NSImage, NSSize, NSRect, NSBezierPath, NSColor, NSFont, NSMutableDictionary, NSAttributedString, NSApp, NSForegroundColorAttributeName, NSFontAttributeName
+            import math
+            
+            size = NSSize(128, 128)
+            image = NSImage.alloc().initWithSize_(size)
+            image.lockFocus()
+            
+            rect = NSRect((4, 4), (120, 120))
+            path = NSBezierPath.bezierPathWithOvalInRect_(rect)
+            
+            # Parse color safely
+            bg_hex = self.colors.get('button_bg', '#007AFF')
+            if bg_hex.startswith('#'):
+                bg_hex = bg_hex[1:]
+            if len(bg_hex) == 6:
+                r = int(bg_hex[0:2], 16) / 255.0
+                g = int(bg_hex[2:4], 16) / 255.0
+                b = int(bg_hex[4:6], 16) / 255.0
+                NSColor.colorWithCalibratedRed_green_blue_alpha_(r, g, b, 1.0).setFill()
+            else:
+                NSColor.colorWithCalibratedRed_green_blue_alpha_(0.0, 0.478, 1.0, 1.0).setFill()
+            path.fill()
+            
+            # Draw globe
+            font_globe = NSFont.systemFontOfSize_(60)
+            attrs_globe = NSMutableDictionary.alloc().init()
+            attrs_globe[NSFontAttributeName] = font_globe
+            attrs_globe[NSForegroundColorAttributeName] = NSColor.whiteColor()
+            str_globe = NSAttributedString.alloc().initWithString_attributes_("🌍", attrs_globe)
+            globe_size = str_globe.size()
+            str_globe.drawAtPoint_((64 - globe_size.width/2, 64 - globe_size.height/2 + 10))
+            
+            # Draw text hint
+            font_hint = NSFont.systemFontOfSize_(16)
+            attrs_hint = NSMutableDictionary.alloc().init()
+            attrs_hint[NSFontAttributeName] = font_hint
+            attrs_hint[NSForegroundColorAttributeName] = NSColor.whiteColor()
+            str_hint = NSAttributedString.alloc().initWithString_attributes_(self.t['ctrl_click'], attrs_hint)
+            hint_size = str_hint.size()
+            str_hint.drawAtPoint_((64 - hint_size.width/2, 20))
+            
+            image.unlockFocus()
+            NSApp.setApplicationIconImage_(image)
+        except Exception as e:
+            print(f"Failed to set dock icon: {e}")
 
     def _format_lang(self, lang_str):
         if self.ui_lang == 'en':
