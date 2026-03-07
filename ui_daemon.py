@@ -987,7 +987,8 @@ class TranslatorUI:
         
         def perform_scan(e):
             print(">>> Scan triggered")
-            self.update_scan_btn_text(" 扫描中... ")
+            scanning_text = " 扫描中... " if self.ui_lang == 'zh' else " Scanning... "
+            self.update_scan_btn_text(scanning_text)
             self.ocr_win.update()
             
             # Hide to avoid capturing the UI itself
@@ -1022,7 +1023,8 @@ class TranslatorUI:
                 extracted_text = result.stdout.strip()
                 if extracted_text:
                     pyperclip.copy(extracted_text)
-                    self.update_scan_btn_text(" ✓ 已复制 ")
+                    copied_text = " ✓ 已复制 " if self.ui_lang == 'zh' else " ✓ Copied "
+                    self.update_scan_btn_text(copied_text)
                     
                     # Store current mouse position for the menu
                     menu_x = self.root.winfo_pointerx()
@@ -1035,7 +1037,8 @@ class TranslatorUI:
                         
                     self.root.after(800, cleanup_and_show_menu)
                 else:
-                    self.update_scan_btn_text(" 未找到文字 ")
+                    not_found_text = " 未找到文字 " if self.ui_lang == 'zh' else " No Text "
+                    self.update_scan_btn_text(not_found_text)
                     # If file doesn't exist or is empty, might be a permission issue
                     if not os.path.exists(tmp_img) or os.path.getsize(tmp_img) == 0:
                         raise PermissionError("Screen Recording permission might be missing.")
@@ -1043,7 +1046,8 @@ class TranslatorUI:
             except Exception as ex:
                 print(f"OCR Error: {ex}")
                 if self.ocr_win.winfo_exists():
-                    self.update_scan_btn_text(" 错误 ")
+                    err_text = " 错误 " if self.ui_lang == 'zh' else " Error "
+                    self.update_scan_btn_text(err_text)
                 
                 # Show permission toast
                 if self.ui_lang == 'zh':
@@ -1058,11 +1062,15 @@ class TranslatorUI:
                         self.ocr_win.deiconify()
                         # Re-force topmost after re-appearing
                         self._force_strict_topmost()
-                        self.ocr_win.after(2000, lambda: self.update_scan_btn_text(" 扫描 🔍 ") if self.ocr_win.winfo_exists() else None)
+                        scan_text = " 扫描 🔍 " if self.ui_lang == 'zh' else " Scan 🔍 "
+                        self.ocr_win.after(2000, lambda: self.update_scan_btn_text(scan_text) if self.ocr_win.winfo_exists() else None)
 
         self._force_strict_topmost()
 
-    def show_error_dialog(self, msg, title="错误"):
+    def show_error_dialog(self, msg, title=None):
+        if title is None:
+            title = "错误" if self.ui_lang == 'zh' else "Error"
+            
         err_win = tk.Toplevel(self.add_lang_win if hasattr(self, 'add_lang_win') and self.add_lang_win.winfo_exists() else self.root)
         err_win.title(title)
         err_win.attributes('-topmost', True)

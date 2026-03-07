@@ -763,10 +763,12 @@ class TranslatorApp(rumps.App):
         """Show error dialog"""
         try:
             # Use rumps notification for errors
+            title = "翻译失败" if self.ui_lang == 'zh' else "Translation Failed"
+            msg_prefix = "错误:" if self.ui_lang == 'zh' else "Error:"
             rumps.notification(
-                title="翻译失败",
+                title=title,
                 subtitle="",
-                message=f"错误: {error_msg}"
+                message=f"{msg_prefix} {error_msg}"
             )
         except Exception as e:
             print(f"Error showing error dialog: {e}")
