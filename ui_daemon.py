@@ -15,6 +15,13 @@ import socket
 import pyperclip
 from google import genai
 from dotenv import load_dotenv
+import shutil
+
+# Ensure .env exists before loading
+env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+env_example = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env.example')
+if not os.path.exists(env_file) and os.path.exists(env_example):
+    shutil.copy(env_example, env_file)
 
 # Load environment variables (override existing ones to ensure .env takes precedence)
 load_dotenv(override=True)
@@ -90,25 +97,25 @@ class TranslatorUI:
         
         self.i18n = {
             'zh': {
-                'rescue_widget': '找回悬浮',
+                'rescue_widget': '🛟 找回悬浮',
                 'ocr_translate': '📸 截图翻译',
-                'auto_zh': '自动检测 → 中文',
-                'auto_de': '自动检测 → 德文',
-                'auto_en': '自动检测 → 英文',
+                'auto_zh': '🌐 自动检测 → 🇨🇳 中文',
+                'auto_de': '🌐 自动检测 → 🇩🇪 德文',
+                'auto_en': '🌐 自动检测 → 🇺🇸 英文',
                 'add_lang': '➕ 添加翻译语言',
                 'remove_lang': '➖ 移除翻译语言',
-                'zh_de': '中文 → 德文',
-                'de_zh': '德文 → 中文',
-                'zh_en': '中文 → 英文',
-                'en_zh': '英文 → 中文',
-                'auth': 'Auth 刷新授权',
-                'ui_zh': '界面中文',
-                'ui_en': '界面英文',
-                'local_ai': '本地 AI',
-                'mouse_follow': '鼠标跟随',
-                'how_to_use': '使用方法',
-                'restart': '重启',
-                'quit': '退出',
+                'zh_de': '🇨🇳 中文 → 🇩🇪 德文',
+                'de_zh': '🇩🇪 德文 → 🇨🇳 中文',
+                'zh_en': '🇨🇳 中文 → 🇺🇸 英文',
+                'en_zh': '🇺🇸 英文 → 🇨🇳 中文',
+                'auth': '🔑 刷新授权',
+                'ui_zh': '🇨🇳 界面中文',
+                'ui_en': '🇺🇸 界面英文',
+                'local_ai': '💻 本地 AI',
+                'mouse_follow': '🖱️ 鼠标跟随',
+                'how_to_use': '📖 使用方法',
+                'restart': '🔄 重启',
+                'quit': '🚪 退出',
                 'ctrl_click': 'ctrl+鼠标',
                 'wait': '等待翻译...',
                 'orig': '原文:',
@@ -124,25 +131,25 @@ class TranslatorUI:
                 're_trans': '🔄 正在重新翻译...'
             },
             'en': {
-                'rescue_widget': 'Show Widget',
+                'rescue_widget': '🛟 Show Widget',
                 'ocr_translate': '📸 OCR Translate',
-                'auto_zh': 'Auto → ZH',
-                'auto_de': 'Auto → DE',
-                'auto_en': 'Auto → EN',
+                'auto_zh': '🌐 Auto → 🇨🇳 ZH',
+                'auto_de': '🌐 Auto → 🇩🇪 DE',
+                'auto_en': '🌐 Auto → 🇺🇸 EN',
                 'add_lang': '➕ Add Language',
                 'remove_lang': '➖ Remove Language',
-                'zh_de': 'ZH → DE',
-                'de_zh': 'DE → ZH',
-                'zh_en': 'ZH → EN',
-                'en_zh': 'EN → ZH',
-                'auth': 'Auth Refresh',
-                'ui_zh': 'UI: Chinese',
-                'ui_en': 'UI: English',
-                'local_ai': 'Local AI',
-                'mouse_follow': 'Mouse Follow',
-                'how_to_use': 'How to Use',
-                'restart': 'Restart',
-                'quit': 'Quit',
+                'zh_de': '🇨🇳 ZH → 🇩🇪 DE',
+                'de_zh': '🇩🇪 DE → 🇨🇳 ZH',
+                'zh_en': '🇨🇳 ZH → 🇺🇸 EN',
+                'en_zh': '🇺🇸 EN → 🇨🇳 ZH',
+                'auth': '🔑 Auth Refresh',
+                'ui_zh': '🇨🇳 UI: Chinese',
+                'ui_en': '🇺🇸 UI: English',
+                'local_ai': '💻 Local AI',
+                'mouse_follow': '🖱️ Mouse Follow',
+                'how_to_use': '📖 How to Use',
+                'restart': '🔄 Restart',
+                'quit': '🚪 Quit',
                 'ctrl_click': 'ctrl+click',
                 'wait': 'Waiting for translation...',
                 'orig': 'Original:',
@@ -187,6 +194,23 @@ class TranslatorUI:
         # Base invisible root
         self.root = tk.Tk()
         self.root.withdraw()
+        
+        # Intercept macOS Dock Quit to ensure both processes die
+        def on_mac_quit():
+            print(">>> macOS Dock Quit intercepted. Telling main app to quit...")
+            self.send_command_to_main('quit')
+            def force_quit():
+                try:
+                    self.root.quit()
+                    self.root.destroy()
+                except: pass
+                os._exit(0)
+            self.root.after(200, force_quit)
+            
+        try:
+            self.root.createcommand('::tk::mac::Quit', on_mac_quit)
+        except Exception:
+            pass
         
         # ---------------- WIDGET WINDOW (Floating Icon) ----------------
         self.widget = tk.Toplevel(self.root)

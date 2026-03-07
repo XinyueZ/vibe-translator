@@ -13,6 +13,13 @@ import json
 import tempfile
 from google import genai
 from dotenv import load_dotenv
+import shutil
+
+# Ensure .env exists before loading
+env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+env_example = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env.example')
+if not os.path.exists(env_file) and os.path.exists(env_example):
+    shutil.copy(env_example, env_file)
 
 # Load environment variables (override existing ones to ensure .env takes precedence)
 load_dotenv(override=True)
@@ -50,54 +57,56 @@ class TranslatorApp(rumps.App):
         
         self.i18n = {
             'zh': {
-                'rescue_widget': '找回悬浮',
-                'hover_tr': '右上悬停',
-                'hover_br': '右下悬停',
-                'hover_tl': '左上悬停',
-                'hover_bl': '左下悬停',
+                'rescue_widget': '🛟 找回悬浮',
+                'hover_tr': '↗️ 右上悬停',
+                'hover_br': '↘️ 右下悬停',
+                'hover_tl': '↖️ 左上悬停',
+                'hover_bl': '↙️ 左下悬停',
                 'ocr_translate': '📸 截图翻译',
-                'auto_zh': '自动检测 → 中文',
-                'auto_de': '自动检测 → 德文',
-                'auto_en': '自动检测 → 英文',
+                'auto_zh': '🌐 自动检测 → 🇨🇳 中文',
+                'auto_de': '🌐 自动检测 → 🇩🇪 德文',
+                'auto_en': '🌐 自动检测 → 🇺🇸 英文',
                 'add_lang': '➕ 添加翻译语言',
                 'remove_lang': '➖ 移除翻译语言',
-                'zh_de': '中文 → 德文',
-                'de_zh': '德文 → 中文',
-                'zh_en': '中文 → 英文',
-                'en_zh': '英文 → 中文',
-                'auth': 'Auth 刷新授权',
-                'ui_zh': '界面中文',
-                'ui_en': '界面英文',
-                'local_ai': '本地 AI',
-                'mouse_follow': '鼠标跟随',
-                'how_to_use': '使用方法',
-                'restart': '重启',
-                'quit': '退出'
+                'zh_de': '🇨🇳 中文 → 🇩🇪 德文',
+                'de_zh': '🇩🇪 德文 → 🇨🇳 中文',
+                'zh_en': '🇨🇳 中文 → 🇺🇸 英文',
+                'en_zh': '🇺🇸 英文 → 🇨🇳 中文',
+                'auth': '🔑 刷新授权',
+                'env_settings': '⚙️ 环境设置 (.env)',
+                'ui_zh': '🇨🇳 界面中文',
+                'ui_en': '🇺🇸 界面英文',
+                'local_ai': '💻 本地 AI',
+                'mouse_follow': '🖱️ 鼠标跟随',
+                'how_to_use': '📖 使用方法',
+                'restart': '🔄 重启',
+                'quit': '🚪 退出'
             },
             'en': {
-                'rescue_widget': 'Show Widget',
-                'hover_tr': 'Hover Top Right',
-                'hover_br': 'Hover Bottom Right',
-                'hover_tl': 'Hover Top Left',
-                'hover_bl': 'Hover Bottom Left',
+                'rescue_widget': '🛟 Show Widget',
+                'hover_tr': '↗️ Hover Top Right',
+                'hover_br': '↘️ Hover Bottom Right',
+                'hover_tl': '↖️ Hover Top Left',
+                'hover_bl': '↙️ Hover Bottom Left',
                 'ocr_translate': '📸 OCR Translate',
-                'auto_zh': 'Auto → ZH',
-                'auto_de': 'Auto → DE',
-                'auto_en': 'Auto → EN',
+                'auto_zh': '🌐 Auto → 🇨🇳 ZH',
+                'auto_de': '🌐 Auto → 🇩🇪 DE',
+                'auto_en': '🌐 Auto → 🇺🇸 EN',
                 'add_lang': '➕ Add Language',
                 'remove_lang': '➖ Remove Language',
-                'zh_de': 'ZH → DE',
-                'de_zh': 'DE → ZH',
-                'zh_en': 'ZH → EN',
-                'en_zh': 'EN → ZH',
-                'auth': 'Auth Refresh',
-                'ui_zh': 'UI: Chinese',
-                'ui_en': 'UI: English',
-                'local_ai': 'Local AI',
-                'mouse_follow': 'Mouse Follow',
-                'how_to_use': 'How to Use',
-                'restart': 'Restart',
-                'quit': 'Quit'
+                'zh_de': '🇨🇳 ZH → 🇩🇪 DE',
+                'de_zh': '🇩🇪 DE → 🇨🇳 ZH',
+                'zh_en': '🇨🇳 ZH → 🇺🇸 EN',
+                'en_zh': '🇺🇸 EN → 🇨🇳 ZH',
+                'auth': '🔑 Auth Refresh',
+                'env_settings': '⚙️ Env Settings (.env)',
+                'ui_zh': '🇨🇳 UI: Chinese',
+                'ui_en': '🇺🇸 UI: English',
+                'local_ai': '💻 Local AI',
+                'mouse_follow': '🖱️ Mouse Follow',
+                'how_to_use': '📖 How to Use',
+                'restart': '🔄 Restart',
+                'quit': '🚪 Quit'
             }
         }
         t = self.i18n[self.ui_lang]
@@ -162,6 +171,7 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
             rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
+            rumps.MenuItem(t['env_settings'], callback=self.open_env_settings),
             rumps.MenuItem(t['auth'], callback=self.refresh_auth),
             rumps.MenuItem(t['restart'], callback=self.restart_app),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
@@ -262,6 +272,7 @@ class TranslatorApp(rumps.App):
                         elif cmd == 'zh_en': self.translate_zh_to_en(None)
                         elif cmd == 'en_zh': self.translate_en_to_zh(None)
                         elif cmd == 'auth': self.refresh_auth(None)
+                        elif cmd == 'env_settings': self.open_env_settings(None)
                         elif cmd == 'ui_zh': self.change_lang('zh')
                         elif cmd == 'ui_en': self.change_lang('en')
                         elif cmd == 'toggle_local_ai': self.toggle_local_ai(self.local_ai_item)
@@ -327,6 +338,7 @@ class TranslatorApp(rumps.App):
             rumps.MenuItem(t['ui_zh'], callback=lambda _: self.change_lang('zh')),
             rumps.MenuItem(t['ui_en'], callback=lambda _: self.change_lang('en')),
             None,  # Separator
+            rumps.MenuItem(t['env_settings'], callback=self.open_env_settings),
             rumps.MenuItem(t['auth'], callback=self.refresh_auth),
             rumps.MenuItem(t['restart'], callback=self.restart_app),
             rumps.MenuItem(t['quit'], callback=self.quit_app)
@@ -754,6 +766,24 @@ class TranslatorApp(rumps.App):
             )
         except Exception as e:
             print(f"Error showing error dialog: {e}")
+
+
+    def open_env_settings(self, _):
+        import os
+        import subprocess
+        import shutil
+        
+        env_file = os.path.join(os.path.dirname(__file__), '.env')
+        env_example = os.path.join(os.path.dirname(__file__), '.env.example')
+        
+        if not os.path.exists(env_file):
+            if os.path.exists(env_example):
+                shutil.copy(env_example, env_file)
+            else:
+                with open(env_file, 'w') as f:
+                    f.write("# Environment Settings\n")
+                    
+        subprocess.Popen(['open', '-t', env_file])
 
     def refresh_auth(self, _):
         """刷新 Google Cloud 授权并重启应用"""
