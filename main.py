@@ -386,8 +386,9 @@ class TranslatorApp(rumps.App):
                 
         except Exception as e:
             print(f"✗ Failed to initialize AI Client: {e}")
-            rumps.alert("AI 初始化失败", f"配置错误或缺失:\n{e}\n\n请检查 .env 文件。")
             self.client = None
+            if not self.config.get('use_local_ai', False):
+                rumps.alert("AI 初始化失败", f"配置错误或缺失:\n{e}\n\n如果您使用本地 AI (Ollama)，请在菜单中开启「本地 AI」选项并忽略此警告。\n否则，请检查 .env 文件。")
             
         # Start UI Daemon automatically
         self.start_ui_daemon()
