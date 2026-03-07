@@ -267,6 +267,14 @@ class TranslatorApp(rumps.App):
                         elif cmd == 'toggle_local_ai': self.toggle_local_ai(self.local_ai_item)
                         elif cmd == 'toggle_mouse_follow': self.toggle_mouse_follow(self.mouse_follow_item)
                         elif cmd == 'restart': self.restart_app(None)
+                        elif cmd == 'retranslate':
+                            if hasattr(self, 'last_translate_args') and self.last_translate_args:
+                                args = self.last_translate_args
+                                threading.Thread(
+                                    target=self.translate_text,
+                                    args=(args['text'], args['source_lang'], args['target_lang'], args['target_lang_en'], args['custom_lang_id']),
+                                    daemon=True
+                                ).start()
                         elif cmd == 'quit': self.quit_app(None)
                     conn.close()
             except Exception as e:
@@ -573,6 +581,14 @@ class TranslatorApp(rumps.App):
 
     def translate_text(self, text, source_lang, target_lang, target_lang_en, custom_lang_id=None):
         """Translate text using VertexAI/LocalAI"""
+        # Save for retranslation
+        self.last_translate_args = {
+            'text': text,
+            'source_lang': source_lang,
+            'target_lang': target_lang,
+            'target_lang_en': target_lang_en,
+            'custom_lang_id': custom_lang_id
+        }
         try:
             rumps.notification(
                 title=f"翻译中: {source_lang} → {target_lang}",

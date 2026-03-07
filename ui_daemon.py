@@ -1186,6 +1186,10 @@ class TranslatorUI:
         font_size_arrow = tk.Label(title_frame, text=" ▼", font=("Arial", 8), bg=self.colors['bg'], fg=self.colors['label_fg'])
         font_size_arrow.pack(side=tk.LEFT)
         
+        self.refresh_button = tk.Label(title_frame, text="🔄", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
+        self.refresh_button.pack(side=tk.LEFT, padx=(15, 0))
+        self.refresh_button.bind('<Button-1>', lambda e: self.retranslate(trigger='refresh'))
+        
         self.backend_frame = tk.Frame(title_frame, bg=self.colors['bg'])
         self.backend_frame.pack(side=tk.RIGHT)
         self._update_backend_label()
@@ -1325,6 +1329,11 @@ class TranslatorUI:
         self.retranslate(trigger='style')
 
     def retranslate(self, trigger='style'):
+        if hasattr(self, 'orig_text'):
+            edited_text = self.orig_text.get(1.0, tk.END).strip()
+            if edited_text:
+                self.current_original = edited_text
+
         if not hasattr(self, 'current_original') or not self.current_original:
             return
 
@@ -1522,7 +1531,7 @@ class TranslatorUI:
             self.orig_text.config(state=tk.NORMAL)
             self.orig_text.delete(1.0, tk.END)
             self.orig_text.insert(tk.END, self.current_original)
-            self.orig_text.config(state=tk.DISABLED)
+            # Removed config(state=tk.DISABLED) to allow user editing
 
             self.trans_text.config(state=tk.NORMAL)
             self.trans_text.delete(1.0, tk.END)
@@ -1575,7 +1584,7 @@ class TranslatorUI:
             self.orig_text.config(state=tk.NORMAL)
             self.orig_text.delete(1.0, tk.END)
             self.orig_text.insert(tk.END, self.current_original)
-            self.orig_text.config(state=tk.DISABLED)
+            # Removed config(state=tk.DISABLED) to allow user editing
 
             self.trans_text.config(state=tk.NORMAL)
             self.trans_text.delete(1.0, tk.END)
