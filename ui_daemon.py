@@ -803,6 +803,18 @@ class TranslatorUI:
             25, 20, 
             text="✕", fill='white', font=("Arial", 14, "bold")
         )
+        
+        if not hasattr(self, 'ocr_is_pinned'):
+            self.ocr_is_pinned = False
+            
+        self.pin_bg = self.ocr_canvas.create_rectangle(
+            50, 5, 90, 35, 
+            fill='#007AFF' if self.ocr_is_pinned else '#8E8E93', outline='', stipple='gray50'
+        )
+        self.pin_txt = self.ocr_canvas.create_text(
+            70, 20, 
+            text="📌" if self.ocr_is_pinned else "📍", fill='white', font=("Arial", 14)
+        )
 
         def update_btn_text(txt):
             if hasattr(self, 'ocr_canvas') and self.ocr_canvas.winfo_exists():
@@ -819,6 +831,16 @@ class TranslatorUI:
             # Check if clicked on close button (5,5 to 45,35)
             if 5 <= x <= 45 and 5 <= y <= 35:
                 close_ocr()
+                return "break"
+            # Check if clicked on pin button (50,5 to 90,35)
+            elif 50 <= x <= 90 and 5 <= y <= 35:
+                self.ocr_is_pinned = not getattr(self, 'ocr_is_pinned', False)
+                if self.ocr_is_pinned:
+                    self.ocr_canvas.itemconfig(self.pin_txt, text="📌")
+                    self.ocr_canvas.itemconfig(self.pin_bg, fill="#007AFF")
+                else:
+                    self.ocr_canvas.itemconfig(self.pin_txt, text="📍")
+                    self.ocr_canvas.itemconfig(self.pin_bg, fill="#8E8E93")
                 return "break"
             # Check if clicked on scan button (w-90,5 to w-5,35)
             elif w-90 <= x <= w-5 and 5 <= y <= 35:
@@ -859,8 +881,8 @@ class TranslatorUI:
                 new_y = self._ocr_start_win_y + dy
                 self.ocr_win.geometry(f"+{new_x}+{new_y}")
             elif self._ocr_drag_mode == "resize":
-                # Min size 50x50 to allow capturing a single character while keeping drag handles reachable
-                new_w = max(50, self._ocr_start_w + dx)
+                # Min size 180x50 to prevent buttons from overlapping
+                new_w = max(180, self._ocr_start_w + dx)
                 new_h = max(50, self._ocr_start_h + dy)
                 self.ocr_win.geometry(f"{new_w}x{new_h}")
                 
@@ -905,6 +927,7 @@ class TranslatorUI:
             import pyperclip
             import os
             
+            extracted_text = ""
             try:
                 x = self.ocr_win.winfo_rootx()
                 y = self.ocr_win.winfo_rooty()
@@ -931,6 +954,8 @@ class TranslatorUI:
                     menu_y = self.root.winfo_pointery()
                     
                     def cleanup_and_show_menu():
+                        if not getattr(self, 'ocr_is_pinned', False) and self.ocr_win.winfo_exists():
+                            self.ocr_win.withdraw()
                         self.show_context_menu_programmatic(x=menu_x, y=menu_y)
                         
                     self.root.after(800, cleanup_and_show_menu)
@@ -954,10 +979,11 @@ class TranslatorUI:
 
             finally:
                 if self.ocr_win.winfo_exists():
-                    self.ocr_win.deiconify()
-                    # Re-force topmost after re-appearing
-                    self._force_strict_topmost()
-                    self.ocr_win.after(2000, lambda: self.update_scan_btn_text(" 扫描 🔍 ") if self.ocr_win.winfo_exists() else None)
+                    if getattr(self, 'ocr_is_pinned', False) or not extracted_text:
+                        self.ocr_win.deiconify()
+                        # Re-force topmost after re-appearing
+                        self._force_strict_topmost()
+                        self.ocr_win.after(2000, lambda: self.update_scan_btn_text(" 扫描 🔍 ") if self.ocr_win.winfo_exists() else None)
 
         self._force_strict_topmost()
 
