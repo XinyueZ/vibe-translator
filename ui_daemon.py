@@ -931,8 +931,6 @@ class TranslatorUI:
                     menu_y = self.root.winfo_pointery()
                     
                     def cleanup_and_show_menu():
-                        if self.ocr_win.winfo_exists():
-                            self.ocr_win.withdraw()
                         self.show_context_menu_programmatic(x=menu_x, y=menu_y)
                         
                     self.root.after(800, cleanup_and_show_menu)
@@ -955,7 +953,7 @@ class TranslatorUI:
                 self.show_custom_toast(perm_msg)
 
             finally:
-                if self.ocr_win.winfo_exists() and not extracted_text:
+                if self.ocr_win.winfo_exists():
                     self.ocr_win.deiconify()
                     # Re-force topmost after re-appearing
                     self._force_strict_topmost()
