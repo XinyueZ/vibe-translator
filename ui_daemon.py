@@ -1300,7 +1300,7 @@ class TranslatorUI:
         self.refresh_button.pack(side=tk.LEFT, padx=(15, 0))
         self.refresh_button.bind('<Button-1>', lambda e: self.retranslate(trigger='refresh'))
         
-        self.stop_button = tk.Label(title_frame, text="🔌", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
+        self.stop_button = tk.Label(title_frame, text="🛑", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
         self.stop_button.pack(side=tk.LEFT, padx=(5, 0))
         self.stop_button.bind('<Button-1>', lambda e: self.stop_translation())
         
