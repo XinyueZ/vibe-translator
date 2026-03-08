@@ -278,6 +278,8 @@ class TranslatorApp(rumps.App):
                         elif cmd == 'toggle_local_ai': self.toggle_local_ai(self.local_ai_item)
                         elif cmd == 'toggle_mouse_follow': self.toggle_mouse_follow(self.mouse_follow_item)
                         elif cmd == 'restart': self.restart_app(None)
+                        elif cmd == 'stop_translation':
+                            self._stop_requested = True
                         elif cmd == 'retranslate':
                             if hasattr(self, 'last_translate_args') and self.last_translate_args:
                                 args = self.last_translate_args
@@ -645,6 +647,7 @@ class TranslatorApp(rumps.App):
 
     def _perform_translation(self, text, source_lang, target_lang, target_lang_en, custom_lang_id=None):
         """Perform translation in background thread"""
+        self._stop_requested = False
         try:
             style_instruction = ""
             if custom_lang_id:
@@ -701,6 +704,8 @@ class TranslatorApp(rumps.App):
                     raise Exception(error_msg)
                 
                 for line in response.iter_lines():
+                    if getattr(self, '_stop_requested', False):
+                        break
                     if line:
                         data = json.loads(line)
                         if "response" in data:
@@ -719,6 +724,8 @@ class TranslatorApp(rumps.App):
                 )
 
                 for chunk in response_stream:
+                    if getattr(self, '_stop_requested', False):
+                        break
                     if chunk.text:
                         translation += chunk.text
                         self._send_to_daemon({

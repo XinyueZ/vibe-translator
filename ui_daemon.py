@@ -1300,6 +1300,10 @@ class TranslatorUI:
         self.refresh_button.pack(side=tk.LEFT, padx=(15, 0))
         self.refresh_button.bind('<Button-1>', lambda e: self.retranslate(trigger='refresh'))
         
+        self.stop_button = tk.Label(title_frame, text="🔌", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
+        self.stop_button.pack(side=tk.LEFT, padx=(5, 0))
+        self.stop_button.bind('<Button-1>', lambda e: self.stop_translation())
+        
         self.backend_frame = tk.Frame(title_frame, bg=self.colors['bg'])
         self.backend_frame.pack(side=tk.RIGHT)
         self._update_backend_label()
@@ -1438,6 +1442,13 @@ class TranslatorUI:
     def on_style_change(self):
         self.retranslate(trigger='style')
 
+    def stop_translation(self):
+        self._stop_requested = True
+        self.progress_label.config(text="翻译已中止" if self.ui_lang == 'zh' else "Translation stopped")
+        self.style_button.config(cursor='hand2')
+        # Also notify main.py to stop if it's translating
+        self.send_command_to_main('stop_translation')
+
     def retranslate(self, trigger='style'):
         if hasattr(self, 'orig_text'):
             edited_text = self.orig_text.get(1.0, tk.END).strip()
@@ -1485,6 +1496,7 @@ class TranslatorUI:
                 new_translation = ""
                 is_first = True
 
+                self._stop_requested = False
                 if self.config.get('use_local_ai', False):
                     import requests
                     host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
@@ -1512,6 +1524,8 @@ class TranslatorUI:
                         raise Exception(error_msg)
 
                     for line in response.iter_lines():
+                        if self._stop_requested:
+                            break
                         if line:
                             data = json.loads(line)
                             if "response" in data:
@@ -1535,6 +1549,8 @@ class TranslatorUI:
                     )
 
                     for chunk in response_stream:
+                        if self._stop_requested:
+                            break
                         if chunk.text:
                             new_translation += chunk.text
 
