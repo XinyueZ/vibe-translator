@@ -885,6 +885,19 @@ if __name__ == "__main__":
     print("Starting Vibe Translator...")
     print("=" * 50)
     import sys
+    import os
+    import subprocess
+
+    try:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        splash_script = os.path.join(script_dir, "splash.py")
+        venv_python = os.path.join(script_dir, "venv", "bin", "python")
+        if not os.path.exists(venv_python):
+            venv_python = sys.executable
+        subprocess.Popen([venv_python, splash_script])
+    except Exception as e:
+        print("Failed to run splash:", e)
+        
     sys.stdout.flush()
 
     app = TranslatorApp()

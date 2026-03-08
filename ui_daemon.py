@@ -393,6 +393,7 @@ class TranslatorUI:
         self.root.after(20, self._mouse_follow_loop)
         self._update_dock_icon()
 
+
     def _mouse_follow_loop(self):
         if (self.mouse_follow and not self.ctrl_pressed and not self.main_win.winfo_viewable() 
             and not getattr(self, '_is_dragging', False) and not getattr(self, '_context_menu_open', False)):
