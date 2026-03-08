@@ -1228,14 +1228,14 @@ class TranslatorUI:
             if not model_list:
                 model_list = [current_model]
                 
-            lbl = tk.Label(self.backend_frame, text="ollama", font=("Arial", 10, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
+            lbl = tk.Label(self.backend_frame, text="ollama", font=("Arial", 13, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
             lbl.pack(side=tk.LEFT, padx=(0, 5))
             
             self.ollama_model_var = tk.StringVar(value=current_model)
-            model_btn = tk.Label(self.backend_frame, textvariable=self.ollama_model_var, font=("Arial", 10), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=2, cursor='hand2')
+            model_btn = tk.Label(self.backend_frame, textvariable=self.ollama_model_var, font=("Arial", 13), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=2, cursor='hand2')
             model_btn.pack(side=tk.LEFT)
             
-            model_arrow = tk.Label(self.backend_frame, text=" ▼", font=("Arial", 8), bg=self.colors['bg'], fg=self.colors['label_fg'])
+            model_arrow = tk.Label(self.backend_frame, text=" ▼", font=("Arial", 10), bg=self.colors['bg'], fg=self.colors['label_fg'])
             model_arrow.pack(side=tk.LEFT)
             
             model_menu = tk.Menu(self.main_win, tearoff=0)
@@ -1257,7 +1257,7 @@ class TranslatorUI:
                 backend = f"vertexai ({model})"
             else:
                 backend = f"genai ({model})"
-            lbl = tk.Label(self.backend_frame, text=backend, font=("Arial", 10, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
+            lbl = tk.Label(self.backend_frame, text=backend, font=("Arial", 13, "bold"), bg=self.colors['bg'], fg=self.colors['button_bg'])
             lbl.pack(side=tk.RIGHT)
 
     def _build_main_ui(self):
@@ -1267,40 +1267,40 @@ class TranslatorUI:
         title_frame = tk.Frame(main_frame, bg=self.colors['bg'])
         title_frame.pack(fill=tk.X, pady=(0, 10))
 
-        self.title_label = tk.Label(title_frame, text=self.t['wait'], font=("Arial", 14, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        self.title_label = tk.Label(title_frame, text=self.t['wait'], font=("Arial", 16, "bold"), bg=self.colors['bg'], fg=self.colors['label_fg'])
         self.title_label.pack(side=tk.LEFT)
 
         # Style selector variables
         self.style_var = tk.StringVar(value="默认" if self.ui_lang == 'zh' else "Default")
         self.style_options = ["默认" if self.ui_lang == 'zh' else "Default"]
         
-        style_label = tk.Label(title_frame, text=self.t['style'], font=("Arial", 11), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        style_label = tk.Label(title_frame, text=self.t['style'], font=("Arial", 13), bg=self.colors['bg'], fg=self.colors['label_fg'])
         style_label.pack(side=tk.LEFT, padx=(20, 5))
 
-        self.style_button = tk.Label(title_frame, textvariable=self.style_var, font=("Arial", 10), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
+        self.style_button = tk.Label(title_frame, textvariable=self.style_var, font=("Arial", 13), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
         self.style_button.pack(side=tk.LEFT)
 
-        style_arrow = tk.Label(title_frame, text=" ▼", font=("Arial", 8), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        style_arrow = tk.Label(title_frame, text=" ▼", font=("Arial", 10), bg=self.colors['bg'], fg=self.colors['label_fg'])
         style_arrow.pack(side=tk.LEFT)
 
         # Font size selector
         font_sizes = [10, 12, 14, 16, 18, 20, 24]
         self.font_size_var = tk.IntVar(value=self.config['font_size'])
 
-        font_size_label = tk.Label(title_frame, text=self.t['font'], font=("Arial", 11), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        font_size_label = tk.Label(title_frame, text=self.t['font'], font=("Arial", 13), bg=self.colors['bg'], fg=self.colors['label_fg'])
         font_size_label.pack(side=tk.LEFT, padx=(20, 5))
 
-        self.font_size_button = tk.Label(title_frame, text=str(self.font_size_var.get()), font=("Arial", 10), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
+        self.font_size_button = tk.Label(title_frame, text=str(self.font_size_var.get()), font=("Arial", 13), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
         self.font_size_button.pack(side=tk.LEFT)
 
-        font_size_arrow = tk.Label(title_frame, text=" ▼", font=("Arial", 8), bg=self.colors['bg'], fg=self.colors['label_fg'])
+        font_size_arrow = tk.Label(title_frame, text=" ▼", font=("Arial", 10), bg=self.colors['bg'], fg=self.colors['label_fg'])
         font_size_arrow.pack(side=tk.LEFT)
         
-        self.refresh_button = tk.Label(title_frame, text="🔄", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
+        self.refresh_button = tk.Label(title_frame, text="🔄", font=("Arial", 16), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
         self.refresh_button.pack(side=tk.LEFT, padx=(15, 0))
         self.refresh_button.bind('<Button-1>', lambda e: self.retranslate(trigger='refresh'))
         
-        self.stop_button = tk.Label(title_frame, text="🛑", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
+        self.stop_button = tk.Label(title_frame, text="🛑", font=("Arial", 16), bg=self.colors['bg'], fg=self.colors['fg'], cursor='hand2')
         self.stop_button.pack(side=tk.LEFT, padx=(5, 0))
         self.stop_button.bind('<Button-1>', lambda e: self.stop_translation())
         
