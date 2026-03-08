@@ -992,11 +992,9 @@ class TranslatorUI:
             self.update_scan_btn_text(scanning_text)
             self.ocr_win.update()
             
-            # Hide to avoid capturing the UI itself
-            self.ocr_win.withdraw()
-            
-            # Use after() to allow OS to process the window hide
-            self.root.after(150, execute_scan)
+            # We NO LONGER hide the window here! This prevents the ugly blink.
+            # We will instead white-out the UI elements from the screenshot before OCR.
+            self.root.after(50, execute_scan)
 
         def execute_scan():
             import subprocess
@@ -1016,6 +1014,37 @@ class TranslatorUI:
                 # macOS screencapture
                 rect = f"{x},{y},{w},{h}"
                 subprocess.run(["screencapture", "-x", f"-R{rect}", tmp_img])
+                
+                # --- White out the UI elements from the captured image ---
+                try:
+                    from PIL import Image, ImageDraw
+                    img = Image.open(tmp_img).convert("RGB")
+                    draw = ImageDraw.Draw(img)
+                    W, H = img.size
+                    
+                    # Calculate scale factor (Retina displays are 2x)
+                    Sx = W / float(w)
+                    Sy = H / float(h)
+                    
+                    # 1. 6px Border all around
+                    draw.rectangle([0, 0, W, 6 * Sy], fill="white") # top
+                    draw.rectangle([0, H - 6 * Sy, W, H], fill="white") # bottom
+                    draw.rectangle([0, 0, 6 * Sx, H], fill="white") # left
+                    draw.rectangle([W - 6 * Sx, 0, W, H], fill="white") # right
+                    
+                    # 2. Top left buttons (Close, Pin)
+                    draw.rectangle([0, 0, 100 * Sx, 40 * Sy], fill="white")
+                    
+                    # 3. Top right button (Scan)
+                    draw.rectangle([(w - 150) * Sx, 0, W, 40 * Sy], fill="white")
+                    
+                    # 4. Bottom right resize handle
+                    draw.rectangle([(w - 35) * Sx, (h - 35) * Sy, W, H], fill="white")
+                    
+                    img.save(tmp_img)
+                except Exception as pil_err:
+                    print("PIL whiteout error:", pil_err)
+                # ---------------------------------------------------------
                 
                 # Run the Swift script
                 script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mac_ocr.swift")
@@ -1059,12 +1088,9 @@ class TranslatorUI:
 
             finally:
                 if self.ocr_win.winfo_exists():
-                    if getattr(self, 'ocr_is_pinned', False) or not extracted_text:
-                        self.ocr_win.deiconify()
-                        # Re-force topmost after re-appearing
-                        self._force_strict_topmost()
-                        scan_text = " 扫描 🔍 " if self.ui_lang == 'zh' else " Scan 🔍 "
-                        self.ocr_win.after(2000, lambda: self.update_scan_btn_text(scan_text) if self.ocr_win.winfo_exists() else None)
+                    # Just revert the text back to Scan after 2 seconds
+                    scan_text = " 扫描 🔍 " if self.ui_lang == 'zh' else " Scan 🔍 "
+                    self.ocr_win.after(2000, lambda: self.update_scan_btn_text(scan_text) if self.ocr_win.winfo_exists() else None)
 
         self._force_strict_topmost()
 
