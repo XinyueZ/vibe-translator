@@ -1,5 +1,10 @@
 # Vibe Translator
 
+<p align="center">
+  <img src="assets/splash.svg" width="600" alt="Vibe Translator Splash">
+</p>
+
+
 [English](#english) | [中文](#中文)
 
 ---
