@@ -1277,11 +1277,26 @@ class TranslatorUI:
             model_arrow.pack(side=tk.LEFT)
             
             model_menu = tk.Menu(self.main_win, tearoff=0)
-            for m in model_list:
-                model_menu.add_command(label=m, command=lambda name=m: self._change_ollama_model(name))
-                
+            
             def show_model_menu(e):
                 try:
+                    # Dynamically fetch models right before showing
+                    dynamic_model_list = []
+                    try:
+                        req = urllib.request.Request(f"{host}/api/tags")
+                        with urllib.request.urlopen(req, timeout=1) as response:
+                            data = json.loads(response.read().decode())
+                            dynamic_model_list = [m['name'] for m in data.get('models', [])]
+                    except Exception:
+                        pass
+                    
+                    if not dynamic_model_list:
+                        dynamic_model_list = [self.config.get('ollama_model', os.getenv('OLLAMA_MODEL', 'qwen2.5:0.5b'))]
+                        
+                    model_menu.delete(0, 'end')
+                    for m in dynamic_model_list:
+                        model_menu.add_command(label=m, command=lambda name=m: self._change_ollama_model(name))
+                    
                     model_menu.post(e.x_root, e.y_root)
                 finally:
                     model_menu.grab_release()
