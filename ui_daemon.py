@@ -1282,13 +1282,27 @@ class TranslatorUI:
                 try:
                     # Dynamically fetch models right before showing
                     dynamic_model_list = []
+                    
+                    # 1. Try CLI first (more reliable for some local setups)
                     try:
-                        req = urllib.request.Request(f"{host}/api/tags")
-                        with urllib.request.urlopen(req, timeout=1) as response:
-                            data = json.loads(response.read().decode())
-                            dynamic_model_list = [m['name'] for m in data.get('models', [])]
+                        import subprocess
+                        result = subprocess.run(['ollama', 'list'], capture_output=True, text=True, check=True)
+                        lines = result.stdout.strip().split('\n')[1:] # skip header
+                        dynamic_model_list = [line.split()[0] for line in lines if line]
                     except Exception:
                         pass
+                        
+                    # 2. Fallback to HTTP API
+                    if not dynamic_model_list:
+                        try:
+                            import urllib.request
+                            import json
+                            req = urllib.request.Request(f"{host}/api/tags")
+                            with urllib.request.urlopen(req, timeout=1) as response:
+                                data = json.loads(response.read().decode())
+                                dynamic_model_list = [m['name'] for m in data.get('models', [])]
+                        except Exception:
+                            pass
                     
                     if not dynamic_model_list:
                         dynamic_model_list = [self.config.get('ollama_model', os.getenv('OLLAMA_MODEL', 'qwen2.5:0.5b'))]
