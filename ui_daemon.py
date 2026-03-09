@@ -1288,9 +1288,14 @@ class TranslatorUI:
                     
                         # 1. Try CLI first (more reliable for some local setups)
                         import subprocess
+                        import os
+                        clean_env = os.environ.copy()
+                        # Override stale localhost values that point to ipv6 ghost instances
+                        clean_env['OLLAMA_HOST'] = "http://127.0.0.1:11434"
+                        
                         for ollama_cmd in ['/opt/homebrew/bin/ollama', '/usr/local/bin/ollama', 'ollama']:
                             try:
-                                result = subprocess.run([ollama_cmd, 'list'], capture_output=True, text=True, check=True)
+                                result = subprocess.run([ollama_cmd, 'list'], env=clean_env, capture_output=True, text=True, check=True)
                                 lines = result.stdout.strip().split('\n')[1:] # skip header
                                 dynamic_model_list = [line.split()[0] for line in lines if line]
                                 debug_log.write(f"CLI Success {ollama_cmd}: {dynamic_model_list}\n")
