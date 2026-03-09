@@ -660,38 +660,56 @@ class TranslatorUI:
         frame1 = tk.Frame(main_frame, bg=self.colors['bg'])
         frame1.pack(fill=tk.X, pady=(0, 15))
         
-        source_entry = tk.Entry(frame1, width=10, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
-        source_entry.pack(side=tk.LEFT)
+        source_entry = tk.Entry(frame1, width=10, font=("Arial", 14), bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], relief=tk.SOLID, borderwidth=1)
+        source_entry.pack(side=tk.LEFT, ipady=3)
         
         tk.Label(frame1, text=" ➔ ", font=("Arial", 14), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT, padx=10)
         
-        target_entry = tk.Entry(frame1, width=10, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
-        target_entry.pack(side=tk.LEFT)
+        target_entry = tk.Entry(frame1, width=10, font=("Arial", 14), bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], relief=tk.SOLID, borderwidth=1)
+        target_entry.pack(side=tk.LEFT, ipady=3)
         
         # Row 2: Default Style
         frame2 = tk.Frame(main_frame, bg=self.colors['bg'])
         frame2.pack(fill=tk.X, pady=(0, 15))
         tk.Label(frame2, text=def_style_text, font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT)
-        default_style_entry = tk.Entry(frame2, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
-        default_style_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(10, 0))
+        default_style_entry = tk.Entry(frame2, font=("Arial", 14), bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], relief=tk.SOLID, borderwidth=1)
+        default_style_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(10, 0), ipady=3)
         
         # Row 3: Styles
         frame3 = tk.Frame(main_frame, bg=self.colors['bg'])
         frame3.pack(fill=tk.X, pady=(0, 15))
         
         self.style_combo_var = tk.StringVar(value=default_text)
-        style_combo = tk.OptionMenu(frame3, self.style_combo_var, default_text)
-        style_combo.config(bg=self.colors['button_bg'], fg='white', activebackground=self.colors.get('button_hover', self.colors['button_bg']), activeforeground='white', borderwidth=0, highlightthickness=0, width=8)
-        style_combo.pack(side=tk.LEFT)
+        
+        style_button_frame = tk.Frame(frame3, bg=self.colors['bg'])
+        style_button_frame.pack(side=tk.LEFT)
+        
+        style_button = tk.Label(style_button_frame, textvariable=self.style_combo_var, font=("Arial", 15), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
+        style_button.pack(side=tk.LEFT)
+        
+        style_arrow = tk.Label(style_button_frame, text=" ▼", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg'], cursor='hand2')
+        style_arrow.pack(side=tk.LEFT)
+        
+        style_menu = tk.Menu(self.add_lang_win, tearoff=0, bg=self.colors['bg'], fg=self.colors['fg'])
+        style_menu.add_command(label=default_text, command=lambda: self.style_combo_var.set(default_text))
+        
+        def show_style_menu(e):
+            try:
+                style_menu.post(e.x_root, e.y_root)
+            finally:
+                style_menu.grab_release()
+                
+        style_button.bind('<Button-1>', show_style_menu)
+        style_arrow.bind('<Button-1>', show_style_menu)
         
         tk.Label(frame3, text=tone_text, font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT, padx=(15, 5))
         
-        style_name_entry = tk.Entry(frame3, width=8, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
-        style_name_entry.pack(side=tk.LEFT)
+        style_name_entry = tk.Entry(frame3, width=8, font=("Arial", 14), bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], relief=tk.SOLID, borderwidth=1)
+        style_name_entry.pack(side=tk.LEFT, ipady=3)
         style_name_entry.insert(0, name_placeholder)
         
-        style_prompt_entry = tk.Entry(frame3, bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'])
-        style_prompt_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 5))
+        style_prompt_entry = tk.Entry(frame3, font=("Arial", 14), bg=self.colors['textbox_bg'], fg=self.colors['fg'], insertbackground=self.colors['fg'], relief=tk.SOLID, borderwidth=1)
+        style_prompt_entry.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(5, 5), ipady=3)
         style_prompt_entry.insert(0, prompt_placeholder)
         
         tk.Label(frame3, text="↵", font=("Arial", 16), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(side=tk.LEFT)
@@ -715,11 +733,10 @@ class TranslatorUI:
             self.custom_styles_dict[name] = prompt
             
             # Update menu
-            menu = style_combo["menu"]
-            menu.delete(0, "end")
-            menu.add_command(label=default_text, command=lambda value=default_text: self.style_combo_var.set(value))
+            style_menu.delete(0, "end")
+            style_menu.add_command(label=default_text, command=lambda: self.style_combo_var.set(default_text))
             for k in self.custom_styles_dict.keys():
-                menu.add_command(label=k, command=lambda value=k: self.style_combo_var.set(value))
+                style_menu.add_command(label=k, command=lambda value=k: self.style_combo_var.set(value))
                 
             self.style_combo_var.set(name)
             style_name_entry.delete(0, tk.END)
@@ -787,13 +804,16 @@ class TranslatorUI:
         rem_win.configure(bg=self.colors['bg'], padx=30, pady=30)
         rem_win.attributes('-topmost', True)
         
+        main_frame = tk.Frame(rem_win, bg=self.colors['bg'])
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
         w = 350
         h = 200
         sw = rem_win.winfo_screenwidth()
         sh = rem_win.winfo_screenheight()
         rem_win.geometry(f"{w}x{h}+{(sw-w)//2}+{(sh-h)//2}")
         
-        tk.Label(rem_win, text="选择要移除的语言组:" if self.ui_lang == 'zh' else "Select language pair to remove:", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(pady=(0, 15))
+        tk.Label(main_frame, text="选择要移除的语言组:" if self.ui_lang == 'zh' else "Select language pair to remove:", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg']).pack(pady=(0, 15))
         
         combo_var = tk.StringVar()
         options = {}
@@ -804,9 +824,27 @@ class TranslatorUI:
         first_label = list(options.keys())[0]
         combo_var.set(first_label)
         
-        combo = tk.OptionMenu(rem_win, combo_var, *options.keys())
-        combo.config(bg=self.colors['button_bg'], fg='white', borderwidth=0, highlightthickness=0)
-        combo.pack(pady=(0, 20))
+        combo_frame = tk.Frame(main_frame, bg=self.colors['bg'])
+        combo_frame.pack(pady=(0, 20))
+        
+        combo_button = tk.Label(combo_frame, textvariable=combo_var, font=("Arial", 15), bg=self.colors['textbox_bg'], fg=self.colors['fg'], relief=tk.SOLID, borderwidth=1, padx=8, pady=4, cursor='hand2')
+        combo_button.pack(side=tk.LEFT)
+        
+        combo_arrow = tk.Label(combo_frame, text=" ▼", font=("Arial", 12), bg=self.colors['bg'], fg=self.colors['label_fg'], cursor='hand2')
+        combo_arrow.pack(side=tk.LEFT)
+        
+        combo_menu = tk.Menu(rem_win, tearoff=0, bg=self.colors['bg'], fg=self.colors['fg'])
+        for opt in options.keys():
+            combo_menu.add_command(label=opt, command=lambda value=opt: combo_var.set(value))
+            
+        def show_combo_menu(e):
+            try:
+                combo_menu.post(e.x_root, e.y_root)
+            finally:
+                combo_menu.grab_release()
+                
+        combo_button.bind('<Button-1>', show_combo_menu)
+        combo_arrow.bind('<Button-1>', show_combo_menu)
         
         def do_remove():
             selected_label = combo_var.get()
@@ -817,7 +855,7 @@ class TranslatorUI:
             rem_win.destroy()
             self.show_error_dialog(f"已移除: {selected_label}" if self.ui_lang == 'zh' else f"Removed: {selected_label}", title="成功" if self.ui_lang == 'zh' else "Success")
             
-        btn = tk.Label(rem_win, text="🗑️", font=("Arial", 28), bg=self.colors['bg'], cursor="hand2")
+        btn = tk.Label(main_frame, text="🗑️", font=("Arial", 28), bg=self.colors['bg'], cursor="hand2")
         btn.pack()
         btn.bind("<Button-1>", lambda e: do_remove())
 
