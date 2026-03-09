@@ -1283,33 +1283,41 @@ class TranslatorUI:
                     # Dynamically fetch models right before showing
                     dynamic_model_list = []
                     
-                    # 1. Try CLI first (more reliable for some local setups)
-                    import subprocess
-                    for ollama_cmd in ['/opt/homebrew/bin/ollama', '/usr/local/bin/ollama', 'ollama']:
-                        try:
-                            result = subprocess.run([ollama_cmd, 'list'], capture_output=True, text=True, check=True)
-                            lines = result.stdout.strip().split('\n')[1:] # skip header
-                            dynamic_model_list = [line.split()[0] for line in lines if line]
-                            if dynamic_model_list:
-                                break
-                        except Exception as ex:
-                            pass
-                        
-                    # 2. Fallback to HTTP API
-                    if not dynamic_model_list:
-                        try:
-                            import urllib.request
-                            import json
-                            req = urllib.request.Request(f"{host}/api/tags")
-                            with urllib.request.urlopen(req, timeout=1) as response:
-                                data = json.loads(response.read().decode())
-                                dynamic_model_list = [m['name'] for m in data.get('models', [])]
-                        except Exception:
-                            pass
+                    with open('/tmp/vibe-translator-ui.log', 'a') as debug_log:
+                        debug_log.write(f"--- Triggered show_model_menu ---\n")
                     
-                    if not dynamic_model_list:
-                        dynamic_model_list = [self.config.get('ollama_model', os.getenv('OLLAMA_MODEL', 'qwen2.5:0.5b'))]
+                        # 1. Try CLI first (more reliable for some local setups)
+                        import subprocess
+                        for ollama_cmd in ['/opt/homebrew/bin/ollama', '/usr/local/bin/ollama', 'ollama']:
+                            try:
+                                result = subprocess.run([ollama_cmd, 'list'], capture_output=True, text=True, check=True)
+                                lines = result.stdout.strip().split('\n')[1:] # skip header
+                                dynamic_model_list = [line.split()[0] for line in lines if line]
+                                debug_log.write(f"CLI Success {ollama_cmd}: {dynamic_model_list}\n")
+                                if dynamic_model_list:
+                                    break
+                            except Exception as ex:
+                                debug_log.write(f"CLI Fail {ollama_cmd}: {ex}\n")
+                                pass
+                            
+                        # 2. Fallback to HTTP API
+                        if not dynamic_model_list:
+                            try:
+                                import urllib.request
+                                import json
+                                req = urllib.request.Request(f"{host}/api/tags")
+                                with urllib.request.urlopen(req, timeout=1) as response:
+                                    data = json.loads(response.read().decode())
+                                    dynamic_model_list = [m['name'] for m in data.get('models', [])]
+                                    debug_log.write(f"HTTP Success: {dynamic_model_list}\n")
+                            except Exception as ex:
+                                debug_log.write(f"HTTP Fail: {ex}\n")
+                                pass
                         
+                        if not dynamic_model_list:
+                            dynamic_model_list = [self.config.get('ollama_model', os.getenv('OLLAMA_MODEL', 'qwen2.5:0.5b'))]
+                            debug_log.write(f"Fallback to default: {dynamic_model_list}\n")
+                            
                     model_menu.delete(0, 'end')
                     for m in dynamic_model_list:
                         model_menu.add_command(label=m, command=lambda name=m: self._change_ollama_model(name))
