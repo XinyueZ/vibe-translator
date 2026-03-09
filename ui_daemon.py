@@ -1290,8 +1290,8 @@ class TranslatorUI:
                         import subprocess
                         import os
                         clean_env = os.environ.copy()
-                        # Override stale localhost values that point to ipv6 ghost instances
-                        clean_env['OLLAMA_HOST'] = "http://127.0.0.1:11434"
+                        # Override stale env vars with what is currently loaded from .env
+                        clean_env['OLLAMA_HOST'] = os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434').rstrip('/')
                         
                         for ollama_cmd in ['/opt/homebrew/bin/ollama', '/usr/local/bin/ollama', 'ollama']:
                             try:
