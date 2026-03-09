@@ -1284,13 +1284,16 @@ class TranslatorUI:
                     dynamic_model_list = []
                     
                     # 1. Try CLI first (more reliable for some local setups)
-                    try:
-                        import subprocess
-                        result = subprocess.run(['ollama', 'list'], capture_output=True, text=True, check=True)
-                        lines = result.stdout.strip().split('\n')[1:] # skip header
-                        dynamic_model_list = [line.split()[0] for line in lines if line]
-                    except Exception:
-                        pass
+                    import subprocess
+                    for ollama_cmd in ['/opt/homebrew/bin/ollama', '/usr/local/bin/ollama', 'ollama']:
+                        try:
+                            result = subprocess.run([ollama_cmd, 'list'], capture_output=True, text=True, check=True)
+                            lines = result.stdout.strip().split('\n')[1:] # skip header
+                            dynamic_model_list = [line.split()[0] for line in lines if line]
+                            if dynamic_model_list:
+                                break
+                        except Exception as ex:
+                            pass
                         
                     # 2. Fallback to HTTP API
                     if not dynamic_model_list:
