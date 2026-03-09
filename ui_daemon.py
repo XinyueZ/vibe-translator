@@ -1252,7 +1252,7 @@ class TranslatorUI:
         use_local = self.config.get('use_local_ai', False)
         if use_local:
             import urllib.request
-            host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
+            host = os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434').rstrip('/')
             model_list = []
             try:
                 req = urllib.request.Request(f"{host}/api/tags")
@@ -1577,7 +1577,7 @@ class TranslatorUI:
                 self._stop_requested = False
                 if self.config.get('use_local_ai', False):
                     import requests
-                    host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
+                    host = os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434').rstrip('/')
                     model = self.config.get('ollama_model') or os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
 
                     payload = {

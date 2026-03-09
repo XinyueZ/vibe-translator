@@ -680,7 +680,7 @@ class TranslatorApp(rumps.App):
             if self.use_local_ai:
                 import requests
                 self.config = load_config()
-                host = os.getenv('OLLAMA_HOST', 'http://localhost:11434').rstrip('/')
+                host = os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434').rstrip('/')
                 model = self.config.get('ollama_model') or os.getenv('OLLAMA_MODEL', 'qwen2.5:1.5b')
 
                 payload = {
