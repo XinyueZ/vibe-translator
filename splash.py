@@ -7,14 +7,18 @@ def run_splash():
         from AppKit import NSApplication, NSWindow, NSWindowStyleMaskBorderless, NSBackingStoreBuffered, NSColor, NSRect, NSScreen, NSApplicationActivationPolicyProhibited
         from WebKit import WKWebView, WKWebViewConfiguration
         from Foundation import NSURL
-    except ImportError:
-        print("WebKit/AppKit not found")
+    except ImportError as e:
+        print("WebKit/AppKit not found:", e)
         return
 
     app = NSApplication.sharedApplication()
     app.setActivationPolicy_(NSApplicationActivationPolicyProhibited)
 
-    splash_svg = os.path.join(os.path.dirname(os.path.abspath(__file__)), "assets", "splash.svg")
+    if getattr(sys, 'frozen', False):
+        base_dir = sys._MEIPASS
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+    splash_svg = os.path.join(base_dir, "assets", "splash.svg")
     
     if not os.path.exists(splash_svg):
         print("No SVG found")

@@ -16,13 +16,27 @@ from dotenv import load_dotenv
 import shutil
 
 # Ensure .env exists before loading
-env_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
-env_example = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env.example')
-if not os.path.exists(env_file) and os.path.exists(env_example):
-    shutil.copy(env_example, env_file)
+import sys
+user_dir = os.path.join(os.path.expanduser('~'), '.vibe_translator')
+os.makedirs(user_dir, exist_ok=True)
+env_file = os.path.join(user_dir, '.env')
+
+if getattr(sys, 'frozen', False):
+    base_dir = sys._MEIPASS
+else:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+env_example = os.path.join(base_dir, '.env.example')
+old_env = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+
+if not os.path.exists(env_file):
+    if os.path.exists(old_env):
+        shutil.copy(old_env, env_file)
+    elif os.path.exists(env_example):
+        shutil.copy(env_example, env_file)
 
 # Load environment variables (override existing ones to ensure .env takes precedence)
-load_dotenv(override=True)
+load_dotenv(env_file, override=True)
 
 
 def load_config():
@@ -413,18 +427,30 @@ class TranslatorApp(rumps.App):
             
         try:
             print(">>> Starting UI Daemon...")
-            script_dir = os.path.dirname(os.path.abspath(__file__))
-            daemon_script = os.path.join(script_dir, "ui_daemon.py")
-            venv_python = os.path.join(script_dir, "venv", "bin", "python")
-            if not os.path.exists(venv_python):
-                venv_python = "python3"
-                
-            self.daemon_process = subprocess.Popen(
-                [venv_python, daemon_script],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL,
-                start_new_session=True
-            )
+            
+            import sys
+            if getattr(sys, 'frozen', False):
+                # Running in a PyInstaller bundle
+                self.daemon_process = subprocess.Popen(
+                    [sys.executable, "--daemon"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
+            else:
+                # Running from source
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                daemon_script = os.path.join(script_dir, "ui_daemon.py")
+                venv_python = os.path.join(script_dir, "venv", "bin", "python")
+                if not os.path.exists(venv_python):
+                    venv_python = sys.executable
+                    
+                self.daemon_process = subprocess.Popen(
+                    [venv_python, daemon_script],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
             
             import atexit
             def cleanup_daemon():
@@ -785,9 +811,17 @@ class TranslatorApp(rumps.App):
         import os
         import subprocess
         import shutil
+        import sys
         
-        env_file = os.path.join(os.path.dirname(__file__), '.env')
-        env_example = os.path.join(os.path.dirname(__file__), '.env.example')
+        user_dir = os.path.join(os.path.expanduser('~'), '.vibe_translator')
+        os.makedirs(user_dir, exist_ok=True)
+        env_file = os.path.join(user_dir, '.env')
+        
+        if getattr(sys, 'frozen', False):
+            base_dir = sys._MEIPASS
+        else:
+            base_dir = os.path.dirname(__file__)
+        env_example = os.path.join(base_dir, '.env.example')
         
         if not os.path.exists(env_file):
             if os.path.exists(env_example):
@@ -888,20 +922,38 @@ class TranslatorApp(rumps.App):
 
 
 if __name__ == "__main__":
-    print("=" * 50)
-    print("Starting Vibe Translator...")
-    print("=" * 50)
     import sys
     import os
     import subprocess
+    import multiprocessing
+
+    multiprocessing.freeze_support()
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--daemon":
+            from ui_daemon import TranslatorUI
+            app = TranslatorUI()
+            app.run()
+            sys.exit(0)
+        elif sys.argv[1] == "--splash":
+            from splash import run_splash
+            run_splash()
+            sys.exit(0)
+
+    print("=" * 50)
+    print("Starting Vibe Translator...")
+    print("=" * 50)
 
     try:
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        splash_script = os.path.join(script_dir, "splash.py")
-        venv_python = os.path.join(script_dir, "venv", "bin", "python")
-        if not os.path.exists(venv_python):
-            venv_python = sys.executable
-        subprocess.Popen([venv_python, splash_script])
+        if getattr(sys, 'frozen', False):
+            subprocess.Popen([sys.executable, "--splash"])
+        else:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            splash_script = os.path.join(script_dir, "splash.py")
+            venv_python = os.path.join(script_dir, "venv", "bin", "python")
+            if not os.path.exists(venv_python):
+                venv_python = sys.executable
+            subprocess.Popen([venv_python, splash_script])
     except Exception as e:
         print("Failed to run splash:", e)
         
